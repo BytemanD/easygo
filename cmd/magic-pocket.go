@@ -13,7 +13,9 @@ func main() {
 		Long:  "Golang 实现的工具合集",
 	}
 	bingImgDownload := commands.GetCommand()
+	simpleHttpServer := commands.GetHTTPServerCommand()
 
 	rootCmd.AddCommand(&bingImgDownload)
+	rootCmd.AddCommand(&simpleHttpServer)
 	rootCmd.Execute()
 }
