@@ -1,69 +1,15 @@
 package main
 
 import (
-	"bufio"
-	"container/list"
 	"errors"
-	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
-	"path"
-	"path/filepath"
 	"strconv"
-	"strings"
 
-	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/cobra"
+
+	"github.com/fjboy/magic-pocket/cmd/commands"
 )
-
-const SCHEME string = "http"
-const HOST string = "www.bingimg.cn"
-const FILE_NAME_MAX_SIZE int = 50
-const URL_GET_IMAGES_PAGE string = "%s://%s/list%s"
-
-func Download(url string, output string) {
-	_, fileName := filepath.Split(url)
-	log.Println("下载", url)
-	resp, _ := http.Get(url)
-
-	defer resp.Body.Close()
-
-	_, err := os.Stat(output)
-	if !os.IsExist(err) {
-		os.MkdirAll(output, os.ModePerm)
-	}
-	outputPath := path.Join(output, fileName)
-	outputFile, _ := os.Create(outputPath)
-	defer outputFile.Close()
-
-	wt := bufio.NewWriter(outputFile)
-	io.Copy(wt, resp.Body)
-	wt.Flush()
-}
-
-func BingImgDownload(page int, uhd bool, output string) {
-	log.Printf("下载页面 %d, 保存位置: %s", page, output)
-	url := fmt.Sprintf(URL_GET_IMAGES_PAGE, SCHEME, HOST, strconv.Itoa(page))
-	resp, _ := http.Get(url)
-	doc, _ := goquery.NewDocumentFromReader(resp.Body)
-	links := list.New()
-
-	doc.Find("a").Each(func(_ int, s *goquery.Selection) {
-		link := s.AttrOr("href", "")
-		if strings.HasSuffix(link, ".jpg") {
-			if !uhd || strings.Contains(link, "/uhd/") {
-				links.PushBack(link)
-			}
-		}
-	})
-	for link := links.Front(); link != nil; link = link.Next() {
-		Download(fmt.Sprintf("%s", link.Value), output)
-		fmt.Println("下载", link.Value)
-	}
-
-}
 
 func main() {
 	var uhd bool
@@ -77,7 +23,7 @@ func main() {
 	var bingImgDownload = &cobra.Command{
 		Use:   "get-bing-img",
 		Short: "下载bing高质量壁纸",
-		Long:  "从www.bingimg.cn网站下载高质量壁纸",
+		Long:  "从 www.bingimg.cn 网站下载高质量壁纸",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return errors.New("requires a page argument")
@@ -90,7 +36,7 @@ func main() {
 				log.Println("ERROR", err)
 				os.Exit(1)
 			}
-			BingImgDownload(page, uhd, output)
+			commands.BingImgDownload(page, uhd, output)
 		},
 	}
 	bingImgDownload.Flags().BoolVar(&uhd, "uhd", false, "仅下载4K壁纸")
