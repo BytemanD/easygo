@@ -35,10 +35,12 @@ func main() {
 	}
 
 	bingImgDownload := commands.GetCommand()
+	httpDownload := commands.GetHttpDownloadCommand()
 	simpleHttpServer := commands.GetHTTPServerCommand()
 	version := GetVersionCommand()
 
 	rootCmd.AddCommand(&bingImgDownload)
+	rootCmd.AddCommand(&httpDownload)
 	rootCmd.AddCommand(&simpleHttpServer)
 	rootCmd.AddCommand(&version)
 	rootCmd.Execute()
