@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/spf13/cobra v1.7.0
-	github.com/wxnacy/wgo v1.0.4 // indirect
+	github.com/wxnacy/wgo v1.0.4
 )
 
 require (

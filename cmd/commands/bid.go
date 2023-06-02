@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wxnacy/wgo/arrays"
 
+	"github.com/fjboy/magic-pocket/pkg/global/logging"
 	httpUtils "github.com/fjboy/magic-pocket/pkg/http"
 )
 
@@ -28,7 +29,7 @@ const UHD_NO string = "no"
 var UHD_CHOICES = []string{UHD_ONLY, UHD_INCLUDE, UHD_NO}
 
 func bingImgDownload(page int8, uhd string, output string) {
-	log.Printf("下载页面 %d, 保存位置: %s", page, output)
+	logging.Info("下载页面 %d, 保存位置: %s", page, output)
 	url := fmt.Sprintf(URL_GET_IMAGES_PAGE, SCHEME, HOST, strconv.Itoa(int(page)))
 	doc := httpUtils.GetHtml(url)
 	links := list.New()
@@ -48,11 +49,12 @@ func bingImgDownload(page int8, uhd string, output string) {
 		}
 	})
 	for link := links.Front(); link != nil; link = link.Next() {
+		logging.Debug("下载 %s", link.Value)
 		httpUtils.Download(fmt.Sprintf("%s", link.Value), output)
 	}
 }
 
-func BingImgDownloadPages(page int8, endPage int8, uhd string, output string) {
+func bingImgDownloadPages(page int8, endPage int8, uhd string, output string) {
 	if endPage <= 0 {
 		endPage = page
 	}
@@ -61,41 +63,42 @@ func BingImgDownloadPages(page int8, endPage int8, uhd string, output string) {
 	}
 }
 
-func GetCommand() cobra.Command {
-	var (
-		uhd     string
-		output  string
-		endPage int8
-	)
+var (
+	uhd     string
+	output  string
+	endPage int8
+)
 
-	var command = &cobra.Command{
-		Use:   "get-bing-img",
-		Short: "下载bing高质量壁纸",
-		Long:  "下载 www.bingimg.cn 网站下的高质量壁纸",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return errors.New("requires a page argument")
-			}
-			page, err := strconv.Atoi(args[0])
-			if err != nil || page == 0 {
-				return errors.New("page must > 0")
-			}
-			if arrays.Contains(UHD_CHOICES, uhd) < 0 {
-				return fmt.Errorf("uhd must be one of %s, found %s", UHD_CHOICES, uhd)
-			}
-			return nil
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			page, err := strconv.Atoi(args[0])
-			if err != nil {
-				log.Println("ERROR", err)
-				os.Exit(1)
-			}
-			BingImgDownloadPages(int8(page), endPage, uhd, output)
-		},
-	}
-	command.Flags().StringVarP(&uhd, "uhd", "u", "noly", "下载4K分辨率")
-	command.Flags().StringVarP(&output, "output", "o", "./", "保存路径")
-	command.Flags().Int8VarP(&endPage, "end-page", "e", 0, "结束的页面, 默认和page相同")
-	return *command
+var BingImgDownloadCmd = &cobra.Command{
+	Use:              "get-bing-img",
+	Short:            "下载bing高质量壁纸",
+	Long:             "下载 www.bingimg.cn 网站下的高质量壁纸",
+	TraverseChildren: true,
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("requires a page argument")
+		}
+		page, err := strconv.Atoi(args[0])
+		if err != nil || page == 0 {
+			return errors.New("page must > 0")
+		}
+		if arrays.Contains(UHD_CHOICES, uhd) < 0 {
+			return fmt.Errorf("uhd must be one of %s, found %s", UHD_CHOICES, uhd)
+		}
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		page, err := strconv.Atoi(args[0])
+		if err != nil {
+			log.Println("ERROR", err)
+			os.Exit(1)
+		}
+		bingImgDownloadPages(int8(page), endPage, uhd, output)
+	},
+}
+
+func init() {
+	BingImgDownloadCmd.Flags().StringVarP(&uhd, "uhd", "u", "only", "下载4K分辨率")
+	BingImgDownloadCmd.Flags().StringVarP(&output, "output", "o", "./", "保存路径")
+	BingImgDownloadCmd.Flags().Int8VarP(&endPage, "end-page", "e", 0, "结束的页面, 默认和page相同")
 }

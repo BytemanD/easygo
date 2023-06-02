@@ -7,41 +7,43 @@ import (
 
 	"github.com/fjboy/magic-pocket/cmd/commands"
 	"github.com/fjboy/magic-pocket/pkg/global/gitutils"
+	"github.com/fjboy/magic-pocket/pkg/global/logging"
 )
 
 var Version string
+var (
+	rootCmd cobra.Command
+	debug   bool
+)
 
-func GetVersionCommand() cobra.Command {
-
-	var command = &cobra.Command{
-		Use:   "version",
-		Short: "版本",
-		Long:  "获取工具版本",
-		Run: func(cmd *cobra.Command, args []string) {
-			if Version == "" {
-				Version = gitutils.GetVersion()
-			}
-			fmt.Println(Version)
-		},
+func getVersion() string {
+	if Version == "" {
+		return gitutils.GetVersion()
 	}
-	return *command
+	return fmt.Sprint(Version)
 }
 
 func main() {
 	var rootCmd = &cobra.Command{
-		Use:   "magic-pocket",
-		Short: "常用工具合集",
-		Long:  fmt.Sprintf("Golang 实现的工具合集(版本: %s)", Version),
+		Use:     "magic-pocket",
+		Short:   "常用工具合集",
+		Long:    fmt.Sprintf("Golang 实现的工具合集"),
+		Version: getVersion(),
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			level := logging.INFO
+			if debug {
+				level = logging.DEBUG
+			}
+			logging.BasicConfig(logging.LogConfig{Level: level})
+		},
 	}
 
-	bingImgDownload := commands.GetCommand()
-	httpDownload := commands.GetHttpDownloadCommand()
-	simpleHttpServer := commands.GetHTTPServerCommand()
-	version := GetVersionCommand()
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "显示Debug信息")
 
-	rootCmd.AddCommand(&bingImgDownload)
-	rootCmd.AddCommand(&httpDownload)
-	rootCmd.AddCommand(&simpleHttpServer)
-	rootCmd.AddCommand(&version)
+	rootCmd.AddCommand(
+		commands.BingImgDownloadCmd,
+		commands.HttpDownloadCmd,
+		commands.SimpleHttpServer)
+
 	rootCmd.Execute()
 }
