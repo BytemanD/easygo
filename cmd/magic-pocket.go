@@ -43,7 +43,9 @@ func main() {
 	rootCmd.AddCommand(
 		commands.BingImgDownloadCmd,
 		commands.HttpDownloadCmd,
-		commands.SimpleHttpServer)
+		commands.SimpleHttpServer,
+		commands.IniCrud,
+	)
 
 	rootCmd.Execute()
 }
