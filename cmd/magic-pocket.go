@@ -12,8 +12,7 @@ import (
 
 var Version string
 var (
-	rootCmd cobra.Command
-	debug   bool
+	debug bool
 )
 
 func getVersion() string {
@@ -26,8 +25,8 @@ func getVersion() string {
 func main() {
 	var rootCmd = &cobra.Command{
 		Use:     "magic-pocket",
-		Short:   "常用工具合集",
-		Long:    fmt.Sprintf("Golang 实现的工具合集"),
+		Short:   "Golang 工具集",
+		Long:    "Golang 实现的工具合集",
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			level := logging.INFO
@@ -43,7 +42,7 @@ func main() {
 	rootCmd.AddCommand(
 		commands.BingImgDownloadCmd,
 		commands.HttpDownloadCmd,
-		commands.SimpleHttpServer,
+		commands.SimpleHttpFS,
 		commands.IniCrud,
 	)
 

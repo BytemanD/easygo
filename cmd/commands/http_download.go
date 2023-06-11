@@ -15,9 +15,9 @@ var (
 	direct     bool
 )
 var HttpDownloadCmd = &cobra.Command{
-	Use:   "http-download",
-	Short: "http 下载",
-	Long:  "指定http地址下载",
+	Use:   "http-download <url>",
+	Short: "HTTP下载器",
+	Long:  "下载指定http地址连接",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return errors.New("requires a url argument")
