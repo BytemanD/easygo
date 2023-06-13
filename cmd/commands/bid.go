@@ -13,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/wxnacy/wgo/arrays"
 
-	"github.com/fjboy/magic-pocket/pkg/global/logging"
-	httpUtils "github.com/fjboy/magic-pocket/pkg/http"
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	httpUtils "github.com/BytemanD/easygo/pkg/http"
 )
 
 const SCHEME string = "http"

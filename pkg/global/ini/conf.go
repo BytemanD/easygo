@@ -1,7 +1,7 @@
 package ini
 
 import (
-	"github.com/fjboy/magic-pocket/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/go-ini/ini"
 )
 

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/fjboy/magic-pocket/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
 var HTML = `
@@ -87,6 +87,7 @@ func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
 
 	respWriter.Header().Set("Content-Disposition", "attachment; filename="+file.Name())
 	logging.Info("下载文件: %s", file.Name())
+	// TODO: 优化文件名
 	http.ServeFile(respWriter, request, filePath)
 }
 func FilePathHandler(respWriter http.ResponseWriter, request *http.Request) {

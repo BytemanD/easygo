@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fjboy/magic-pocket/cmd/commands"
-	"github.com/fjboy/magic-pocket/pkg/global/gitutils"
-	"github.com/fjboy/magic-pocket/pkg/global/logging"
+	"github.com/BytemanD/easygo/cmd/commands"
+	"github.com/BytemanD/easygo/pkg/global/gitutils"
+	"github.com/BytemanD/easygo/pkg/global/logging"
 )
 
 var Version string
@@ -24,7 +24,7 @@ func getVersion() string {
 
 func main() {
 	var rootCmd = &cobra.Command{
-		Use:     "magic-pocket",
+		Use:     "easygo",
 		Short:   "Golang 工具集",
 		Long:    "Golang 实现的工具合集",
 		Version: getVersion(),

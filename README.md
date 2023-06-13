@@ -1,4 +1,4 @@
-# magic-pocket
+# easygo
 Golang 工具合集
 
 ## 编译

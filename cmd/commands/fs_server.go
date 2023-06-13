@@ -3,8 +3,8 @@ package commands
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/fjboy/magic-pocket/pkg/global/logging"
-	myHttp "github.com/fjboy/magic-pocket/pkg/http"
+	"github.com/BytemanD/easygo/pkg/global/logging"
+	myHttp "github.com/BytemanD/easygo/pkg/http"
 )
 
 var (

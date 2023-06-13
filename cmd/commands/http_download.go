@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	httpUtils "github.com/fjboy/magic-pocket/pkg/http"
+	httpUtils "github.com/BytemanD/easygo/pkg/http"
 )
 
 var (

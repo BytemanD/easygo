@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/fjboy/magic-pocket/pkg/global/ini"
+	"github.com/BytemanD/easygo/pkg/global/ini"
 )
 
 var IniCrud = &cobra.Command{

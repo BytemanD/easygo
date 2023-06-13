@@ -1,4 +1,4 @@
-module github.com/fjboy/magic-pocket/pkg
+module github.com/BytemanD/easygo/pkg
 
 go 1.15
 

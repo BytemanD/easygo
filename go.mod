@@ -1,4 +1,4 @@
-module github.com/fjboy/magic-pocket
+module github.com/BytemanD/easygo
 
 go 1.20
 
@@ -10,10 +10,11 @@ require (
 
 require (
 	github.com/andybalholm/cascadia v1.3.1 // indirect
-	github.com/fjboy/magic-pocket/pkg v0.0.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/net v0.7.0 // indirect
+
+	github.com/BytemanD/easygo/pkg v0.0.0
 )
 
 require (
@@ -22,4 +23,4 @@ require (
 	golang.org/x/sys v0.5.0 // indirect
 )
 
-replace github.com/fjboy/magic-pocket/pkg => ./pkg
+replace github.com/BytemanD/easygo/pkg => ./pkg
