@@ -38,16 +38,17 @@ func getCommitNum(startTag string, endTag string) int {
 
 func GetVersion() string {
 	re := regexp.MustCompile("^[vV]*[0-9]")
-	out, err := getOutput("git", "tag", "--sort=-taggerdate")
+	out, err := getOutput("git", "tag")
 	var (
 		lastTag string
 		nums    int
 	)
 	if err == nil {
-		tags := strings.Split(out, "\n")
-		for i := 0; i < len(tags); i++ {
-			if re.FindString(tags[i]) != "" {
-				lastTag = tags[i]
+		tags := strings.Split(strings.Trim(out, "\n"), "\n")
+		for i := range tags {
+			tag := tags[len(tags)-1-i]
+			if re.FindString(tag) != "" {
+				lastTag = tag
 				break
 			}
 		}
