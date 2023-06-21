@@ -1,12 +1,13 @@
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	httpUtils "github.com/BytemanD/easygo/pkg/http"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 )
 
 var (
@@ -19,12 +20,11 @@ var HttpDownloadCmd = &cobra.Command{
 	Short: "HTTP下载器",
 	Long:  "下载指定http地址连接",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			return errors.New("requires a url argument")
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+			return err
 		}
-		url := args[0]
-		if !strings.HasPrefix(url, "http://") && !strings.HasPrefix(url, "https://") {
-			return errors.New("url must starts with http:// or https://")
+		if err := stringutils.MustMatch(args[0], "^http(s)*://.+"); err != nil {
+			return fmt.Errorf("invalid flag 'url': %s", err)
 		}
 		return nil
 	},

@@ -2,19 +2,16 @@ package commands
 
 import (
 	"container/list"
-	"errors"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/cobra"
-	"github.com/wxnacy/wgo/arrays"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	httpUtils "github.com/BytemanD/easygo/pkg/http"
+	"github.com/BytemanD/easygo/pkg/stringutils"
 )
 
 const SCHEME string = "http"
@@ -70,29 +67,24 @@ var (
 )
 
 var BingImgDownloadCmd = &cobra.Command{
-	Use:              "get-bing-img",
+	Use:              "get-bing-img <page>",
 	Short:            "下载bing高质量壁纸",
 	Long:             "下载 www.bingimg.cn 网站下的高质量壁纸",
 	TraverseChildren: true,
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 {
-			return errors.New("requires a page argument")
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+			return err
 		}
-		page, err := strconv.Atoi(args[0])
-		if err != nil || page == 0 {
-			return errors.New("page must > 0")
+		if _, err := stringutils.MustGreaterThan(args[0], 1); err != nil {
+			return fmt.Errorf("invalid arg 'page': %s", err)
 		}
-		if arrays.Contains(UHD_CHOICES, uhd) < 0 {
-			return fmt.Errorf("uhd must be one of %s, found %s", UHD_CHOICES, uhd)
+		if err := stringutils.MustInStringChoises(uhd, UHD_CHOICES); err != nil {
+			return fmt.Errorf("invalid flag 'uhd': %s", err)
 		}
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		page, err := strconv.Atoi(args[0])
-		if err != nil {
-			log.Println("ERROR", err)
-			os.Exit(1)
-		}
+		page, _ := strconv.Atoi(args[0])
 		bingImgDownloadPages(int8(page), endPage, uhd, output)
 	},
 }

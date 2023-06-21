@@ -13,8 +13,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/PuerkitoBio/goquery"
+	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/PuerkitoBio/goquery"
 )
 
 func GetHtml(url string) goquery.Document {
@@ -46,20 +47,21 @@ func GetLinks(url string, regex string) list.List {
 	return *links
 }
 
-func Download(url string, output string) {
+func Download(url string, output string) error {
 	_, fileName := filepath.Split(url)
-	resp, err1 := http.Get(url)
-	if err1 != nil {
-		logging.Error("下载 %s 失败, 原因: %s", url, err1)
-		return
+	resp, err := http.Get(url)
+	if err != nil {
+		logging.Error("下载 %s 失败, 原因: %s", url, err)
+		return err
 	}
 
 	defer resp.Body.Close()
 
-	_, err := os.Stat(output)
-	if !os.IsExist(err) {
-		os.MkdirAll(output, os.ModePerm)
+	fp := fileutils.FilePath{Path: output}
+	if err := fp.MakeDirs(); err != nil {
+		return err
 	}
+
 	outputPath := path.Join(output, fileName)
 	outputFile, _ := os.Create(outputPath)
 	defer outputFile.Close()
@@ -67,6 +69,7 @@ func Download(url string, output string) {
 	wt := bufio.NewWriter(outputFile)
 	io.Copy(wt, resp.Body)
 	wt.Flush()
+	return nil
 }
 
 func DownloadLinksInHtml(url string, regex string, output string) {
@@ -77,7 +80,10 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 	)
 	link := links.Front()
 	wg.Add(links.Len())
-	logging.Info("开始下载, 数量 %d", links.Len())
+	logging.Info("链接数量: %d", links.Len())
+	if links.Len() > 0 {
+		logging.Info("开始下载")
+	}
 	for i := 0; i < links.Len(); i++ {
 		go func(aaa list.Element) {
 			Download(fmt.Sprintf("%s", aaa.Value), output)
@@ -90,5 +96,7 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 		}
 	}
 	wg.Wait()
-	logging.Info("下载完成")
+	if links.Len() > 0 {
+		logging.Info("下载完成")
+	}
 }

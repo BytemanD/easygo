@@ -7,8 +7,7 @@ import (
 	"runtime"
 )
 
-var std = New()
-var MAX_ERROR_STACKS = 20
+type LogLevel uint32
 
 const (
 	ERROR   LogLevel = 1
@@ -16,15 +15,6 @@ const (
 	INFO    LogLevel = 3
 	DEBUG   LogLevel = 4
 )
-
-func New() *Logger {
-	return &Logger{
-		Level:          ERROR,
-		MaxErrorStacks: MAX_ERROR_STACKS,
-	}
-}
-
-type LogLevel uint32
 
 type Logger struct {
 	Level          LogLevel

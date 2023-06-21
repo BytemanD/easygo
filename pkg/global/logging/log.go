@@ -2,6 +2,16 @@ package logging
 
 import "os"
 
+var std = New()
+var MAX_ERROR_STACKS = 20
+
+func New() *Logger {
+	return &Logger{
+		Level:          ERROR,
+		MaxErrorStacks: MAX_ERROR_STACKS,
+	}
+}
+
 type LogConfig struct {
 	Level          LogLevel
 	MaxErrorStacks int
