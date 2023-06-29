@@ -44,6 +44,7 @@ func main() {
 		commands.HttpDownloadCmd,
 		commands.SimpleHttpFS,
 		commands.IniCrud,
+		commands.ContainerImageSync,
 	)
 
 	rootCmd.Execute()

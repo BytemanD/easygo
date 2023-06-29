@@ -2,29 +2,18 @@ package gitutils
 
 import (
 	"fmt"
-	"os/exec"
 	"regexp"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/syscmd"
 )
-
-func getOutput(command string, args ...string) (string, error) {
-	cmd := exec.Command(command, args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		logging.Error("命令 '%s' 执行失败: %s", cmd, err)
-		return "", err
-	}
-	return string(out), err
-}
 
 func getCommitNum(startTag string, endTag string) int {
 	tagRange := startTag
 	if endTag != "" {
 		tagRange += "..." + endTag
 	}
-	out, err := getOutput("git", "log", "--pretty=oneline", tagRange)
+	out, err := syscmd.GetOutput("git", "log", "--pretty=oneline", tagRange)
 	if err != nil {
 		return 0
 	}
@@ -38,7 +27,7 @@ func getCommitNum(startTag string, endTag string) int {
 
 func GetVersion() string {
 	re := regexp.MustCompile("^[vV]*[0-9]")
-	out, err := getOutput("git", "tag")
+	out, err := syscmd.GetOutput("git", "tag")
 	var (
 		lastTag string
 		nums    int
