@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
@@ -24,16 +25,17 @@ var HTML = `
 	<body>
 		<div style="margin-left: 50px">
 			<table>
-				<tr></th><th>类型</th><th>名称</th></tr>
+				<tr></th><th>类型</th><th>名称</th><th>大小</th></tr>
 				{{ range $index, $webFile := . }}
 					<tr>
 						{{ if $webFile.IsDir }}
 						<td><i class="fa fa-folder" style="color: orange;"></i></td>
 						<td><a href="{{$webFile.WebPath}}" > {{ $webFile.Name }} </a></li></td>
 						{{ else }}
-						<td><i class="fa fa-file" style="color: green;"></i></td>
+						<td><i class="fa fa-file" style="color: grey;"></i></td>
 						<td><a target="view_window" href="{{$webFile.WebPath}}" > {{ $webFile.Name }} </a></li></td>
 						{{ end }}
+						<td style="text-align:right">{{ $webFile.HumanSize }}</td>
 					</tr>
 				{{ end}}
 			<table>
@@ -51,7 +53,14 @@ type HTTPFSConfig struct {
 type WebFile struct {
 	Dir  string
 	Name string
+	Size int64
 }
+
+const (
+	KB = 1024
+	MB = KB * 1024
+	GB = MB * 1024
+)
 
 func (webFile *WebFile) LogicPath() string {
 	return filepath.Join(webFile.Dir, webFile.Name)
@@ -64,6 +73,18 @@ func (webFile *WebFile) IsDir() bool {
 	filePath := filepath.Join(FSConfig.Root, webFile.LogicPath())
 	fi, _ := os.Stat(filePath)
 	return fi.IsDir()
+}
+func (webFile *WebFile) HumanSize() string {
+	switch {
+	case webFile.Size > GB:
+		return fmt.Sprintf("%.1f G", float32(webFile.Size)/GB)
+	case webFile.Size > MB:
+		return fmt.Sprintf("%.1f M", float32(webFile.Size)/MB)
+	case webFile.Size > KB:
+		return fmt.Sprintf("%.1f K", float32(webFile.Size)/KB)
+	default:
+		return fmt.Sprintf("%d B", webFile.Size)
+	}
 }
 
 func handleError(err error, respWriter http.ResponseWriter, request *http.Request) {
@@ -85,9 +106,9 @@ func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
 	file, _ := os.Open(filePath)
 	defer file.Close()
 
-	respWriter.Header().Set("Content-Disposition", "attachment; filename="+file.Name())
 	logging.Info("下载文件: %s", file.Name())
-	// TODO: 优化文件名
+	respWriter.Header().Set("Content-Disposition", "attachment; filename="+
+		filepath.Base(file.Name()))
 	http.ServeFile(respWriter, request, filePath)
 }
 func FilePathHandler(respWriter http.ResponseWriter, request *http.Request) {
@@ -109,10 +130,14 @@ func FilePathHandler(respWriter http.ResponseWriter, request *http.Request) {
 			webFile := WebFile{
 				Dir:  filepath.Join(request.URL.Path),
 				Name: fi.Name(),
+				Size: fi.Size(),
 			}
 			webFiles = append(webFiles, webFile)
 		}
 		tmpl, _ := template.New("dirPage").Parse(HTML)
+		sort.Slice(webFiles, func(i, j int) bool {
+			return webFiles[i].IsDir()
+		})
 		tmpl.Execute(respWriter, webFiles)
 	} else {
 		handleFileDownload(respWriter, request)
