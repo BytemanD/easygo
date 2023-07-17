@@ -12,9 +12,9 @@ var (
 	destRepos []string
 )
 var ContainerImageSync = &cobra.Command{
-	Use:   "container-repo-sync <source repo> <image>",
+	Use:   "registry-sync <source repo> <image>",
 	Short: "同步容器镜像",
-	Long:  "同步两个镜像仓库之间的镜像",
+	Long:  "同步两个仓库之间的镜像",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(2)(cmd, args); err != nil {
 			return err
@@ -25,12 +25,12 @@ var ContainerImageSync = &cobra.Command{
 		srcRepo := args[0]
 		image := args[1]
 
-		ctl, err := syscmd.GetContainerCtl()
+		ctl, err := syscmd.GetDefaultContainerCli()
 		if err != nil {
 			logging.Error("获取客户端失败: %s", err)
 			os.Exit(1)
 		}
-		logging.Info("使用容器客户端: %s", ctl.Cmd)
+		logging.Info("使用容器客户端: %s", ctl.GetCmd())
 		srcImage := ctl.GetImageRepo(srcRepo, image)
 
 		logging.Info("拉取镜像: %s", srcImage)
