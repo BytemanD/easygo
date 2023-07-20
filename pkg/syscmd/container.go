@@ -13,109 +13,61 @@ type ContainerCli interface {
 	GetCmd() string
 }
 
-type Docker struct {
+type Impl struct {
 	cmd string
 }
 
-type containerCli ContainerCli
-
-func (ctl Docker) GetImageRepo(repo string, image string) string {
+func (ctl Impl) GetImageRepo(repo string, image string) string {
 	repo = strings.TrimSuffix(repo, "/")
 	image = strings.TrimPrefix(image, "/")
 	return fmt.Sprintf("%s/%s", repo, image)
 }
-func (ctl Docker) Pull(image string) error {
-	_, err := GetOutput(ctl.cmd, "pull", image)
+func (ctl Impl) Pull(image string) error {
+	_, err := GetOutput(ctl.GetCmd(), "pull", image)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (ctl Docker) Push(image string) error {
-	_, err := GetOutput(ctl.cmd, "push", image)
+func (ctl Impl) Push(image string) error {
+	_, err := GetOutput(ctl.GetCmd(), "push", image)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (ctl Docker) Tag(image string, tag string) error {
-	_, err := GetOutput(ctl.cmd, "tag", image, tag)
+func (ctl Impl) Tag(image string, tag string) error {
+	_, err := GetOutput(ctl.GetCmd(), "tag", image, tag)
 	if err != nil {
 		return err
 	}
 	return nil
 }
-func (ctl Docker) GetCmd() string {
+func (ctl Impl) GetCmd() string {
 	return ctl.cmd
 }
 
-type Podman struct {
-	Docker
-	cmd string
+func NewDocker() *Impl {
+	return &Impl{cmd: "docker"}
 }
 
-func NewDocker() *Docker {
-	return &Docker{
-		cmd: "docker",
-	}
-}
-
-func NewPodman() *Podman {
-	return &Podman{
-		cmd: "podman",
-	}
+func NewPodman() *Impl {
+	return &Impl{cmd: "podman"}
 }
 
 var SUPPORT_CONTAINER_CLIENT = []string{
 	"podman", "docker",
 }
 
-// func (ctl *ContainerCtl) GetImageRepo(repo string, image string) string {
-// 	repo = strings.TrimSuffix(repo, "/")
-// 	image = strings.TrimPrefix(image, "/")
-// 	return fmt.Sprintf("%s/%s", repo, image)
-// }
-
-// func (ctl *ContainerCtl) Pull(image string) error {
-// 	_, err := GetOutput(ctl.Cmd, "pull", image)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-// func (ctl *ContainerCtl) Push(image string) error {
-// 	_, err := GetOutput(ctl.Cmd, "push", image)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-// func (ctl *ContainerCtl) Tag(image string, tag string) error {
-// 	_, err := GetOutput(ctl.Cmd, "tag", image, tag)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
-// func GetContainerCtl() (ContainerCtl, error) {
-// 	for _, client := range SUPPORT_CONTAINER_CLIENT {
-// 		_, err := GetOutput(client, "-v")
-// 		if err == nil {
-// 			return ContainerCtl{Cmd: client}, nil
-// 		}
-// 	}
-// 	return ContainerCtl{}, fmt.Errorf("无容器客户端，支持的客户端: %v", SUPPORT_CONTAINER_CLIENT)
-// }
-
 func GetDefaultContainerCli() (ContainerCli, error) {
 	for _, client := range SUPPORT_CONTAINER_CLIENT {
-		_, err := GetOutput(client, "-v")
-		if err == nil {
-			if client == "podman" {
-				return Podman{cmd: "podman"}, nil
-			}
-			return &Docker{cmd: "docker"}, nil
+		if _, err := GetOutput(client, "-v"); err != nil {
+			continue
+		}
+		if client == "podman" {
+			return NewPodman(), nil
+		} else {
+			return NewDocker(), nil
 		}
 	}
 	return nil, fmt.Errorf("无容器客户端，支持的客户端: %v", SUPPORT_CONTAINER_CLIENT)
