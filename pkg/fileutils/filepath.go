@@ -2,8 +2,8 @@ package fileutils
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"strings"
 )
@@ -30,37 +30,46 @@ func (fp *FilePath) Exists() bool {
 	return true
 }
 func (fp *FilePath) IsDir() bool {
-	if fp.Exists() {
-		return true
+	if !fp.Exists() {
+		return false
 	}
 	return (*fp.fileInfo).IsDir()
 }
 
 func (fp *FilePath) IsFile() bool {
-	return !fp.IsDir()
+	if !fp.Exists() {
+		return false
+	}
+	return !(*fp.fileInfo).IsDir()
 }
 
-func (fp *FilePath) ReadLines(file string) ([]string, error) {
+func (fp *FilePath) ReadLines() ([]string, error) {
+	fileContent, err := fp.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(fileContent, "\n"), nil
+}
+func (fp *FilePath) ReadAll() (string, error) {
 	if !fp.Exists() {
-		return nil, fmt.Errorf("%s 不存在", fp.Path)
+		return "", fmt.Errorf("%s 不存在", fp.Path)
 	}
 	if !fp.IsFile() {
-		return nil, fmt.Errorf("%s 不是文件", fp.Path)
+		return "", fmt.Errorf("%s 不是文件", fp.Path)
 	}
 
-	f, err := os.OpenFile(file, os.O_RDONLY, 0666)
+	f, err := os.OpenFile(fp.Path, os.O_RDONLY, 0666)
 	if err != nil {
-		return nil, fmt.Errorf("文件打开失败, %s", err)
+		return "", fmt.Errorf("文件打开失败, %s", err)
 	}
 	defer f.Close()
 
-	bytes, err := ioutil.ReadAll(f)
+	bytes, err := io.ReadAll(f)
 	if err != nil {
-		return nil, fmt.Errorf("文件读取失败 %s", err)
+		return "", fmt.Errorf("文件读取失败 %s", err)
 	}
-	return strings.Split(string(bytes), "\n"), nil
+	return string(bytes), nil
 }
-
 func (fp *FilePath) MakeDirs() error {
 	if !fp.Exists() {
 		return os.MkdirAll(fp.Path, os.ModePerm)
@@ -69,4 +78,13 @@ func (fp *FilePath) MakeDirs() error {
 		return fmt.Errorf("已存在文件 %s", fp.Path)
 	}
 	return nil
+}
+
+func ReadAll(path string) (string, error) {
+	filePath := FilePath{Path: path}
+	content, err := filePath.ReadAll()
+	if err != nil {
+		return "", err
+	}
+	return content, nil
 }
