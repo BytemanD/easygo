@@ -3,7 +3,6 @@ package http
 import (
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -121,16 +120,19 @@ func FilePathHandler(respWriter http.ResponseWriter, request *http.Request) {
 	}
 	webFiles := []WebFile{}
 	if dir.IsDir() {
-		rd, err := ioutil.ReadDir(dirPath)
+		rd, err := os.ReadDir(dirPath)
 		if err != nil {
 			handleError(err, respWriter, request)
 			return
 		}
 		for _, fi := range rd {
-			webFile := WebFile{
-				Dir:  filepath.Join(request.URL.Path),
-				Name: fi.Name(),
-				Size: fi.Size(),
+			webFile := WebFile{Dir: filepath.Join(request.URL.Path), Name: fi.Name()}
+			fiInfo, err := fi.Info()
+			if err == nil {
+				webFile.Size = fiInfo.Size()
+			} else {
+				logging.Warning("get dir info failed, %v", err)
+				webFile.Size = 0
 			}
 			webFiles = append(webFiles, webFile)
 		}

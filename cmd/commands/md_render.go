@@ -8,6 +8,7 @@ import (
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/terminal"
 )
 
 var MDRender = &cobra.Command{
@@ -21,7 +22,25 @@ var MDRender = &cobra.Command{
 			logging.Fatal("read from file %s failed", fp.Path)
 		}
 
-		result := markdown.Render(content, 100, 4)
+		// width, _ := cmd.Flags().GetInt("width")
+		// leftAlign, _ := cmd.Flags().GetInt("left-align")
+		spredout, _ := cmd.Flags().GetBool("spredout")
+
+		columns, leftPad := 100, 4
+		terminal := terminal.CurTerminal()
+		if terminal != nil {
+			fmt.Println(terminal.Columns)
+			if spredout {
+				columns, leftPad = terminal.Columns, 0
+			} else {
+				columns, leftPad = terminal.Columns*2/3, terminal.Columns/6
+			}
+		}
+		result := markdown.Render(content, columns+leftPad, leftPad)
 		fmt.Println(string(result))
 	},
+}
+
+func init() {
+	MDRender.Flags().BoolP("spredout", "s", false, "铺满窗口, 默认不铺满, 宽度为窗口的2/3")
 }
