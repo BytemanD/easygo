@@ -45,6 +45,7 @@ func main() {
 		commands.SimpleHttpFS,
 		commands.IniCrud,
 		commands.ContainerImageSync,
+		commands.MDRender,
 	)
 
 	rootCmd.Execute()
