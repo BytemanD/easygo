@@ -1,6 +1,9 @@
 package logging
 
-import "os"
+import (
+	"log"
+	"os"
+)
 
 var std = New()
 var MAX_ERROR_STACKS = 20
@@ -24,6 +27,14 @@ func BasicConfig(config LogConfig) {
 	if config.MaxErrorStacks > 0 {
 		std.SetMaxErrorStacks(config.MaxErrorStacks)
 	}
+}
+
+func SetOutput(file string) {
+	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logFile)
 }
 
 func Debug(format string, args ...interface{}) {

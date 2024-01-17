@@ -42,6 +42,27 @@ func (fp *FilePath) IsFile() bool {
 	}
 	return !(*fp.fileInfo).IsDir()
 }
+func (fp *FilePath) Size() int64 {
+	fi, err := fp.getFileInfo()
+	if err != nil {
+		return 0
+	}
+	return fi.Size()
+}
+func (fp *FilePath) Name() string {
+	fi, err := fp.getFileInfo()
+	if err != nil {
+		return ""
+	}
+	return fi.Name()
+}
+func (fp *FilePath) Mode() fs.FileMode {
+	fi, err := fp.getFileInfo()
+	if err != nil {
+		return 0
+	}
+	return fi.Mode()
+}
 
 func (fp *FilePath) ReadLines() ([]string, error) {
 	fileContent, err := fp.ReadAll()
