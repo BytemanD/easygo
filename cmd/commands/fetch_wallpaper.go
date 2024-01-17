@@ -8,12 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
-	"github.com/spf13/cobra"
-
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	httpLib "github.com/BytemanD/easygo/pkg/http"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/PuerkitoBio/goquery"
+	"github.com/spf13/cobra"
 )
 
 const (
@@ -60,10 +59,14 @@ func bingImgDownload(page int8, uhd string, output string) {
 	}
 }
 
-var BingImgDownloadCmd = &cobra.Command{
+var FetchWallpaperCmd = &cobra.Command{
+	Use:   "fetch-wallpaper",
+	Short: "下载壁纸",
+}
+
+var BingImgCmd = &cobra.Command{
 	Use:              "bingimg <page>",
-	Short:            "下载bing高质量壁纸",
-	Long:             "下载 www.bingimg.cn 网站下的高质量壁纸",
+	Short:            "下载 www.bingimg.cn 网站的壁纸",
 	TraverseChildren: true,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
@@ -92,10 +95,9 @@ var BingImgDownloadCmd = &cobra.Command{
 		}
 	},
 }
-var BingImgWdbyte = &cobra.Command{
+var BingImgWdbyteCmd = &cobra.Command{
 	Use:              "bingimg-wdbyte",
-	Short:            "下载bing高质量壁纸",
-	Long:             "下载 bing.wdbyte.com 网站下的高质量壁纸",
+	Short:            "下载 bing.wdbyte.com 网站的壁纸",
 	TraverseChildren: true,
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
@@ -135,11 +137,12 @@ var BingImgWdbyte = &cobra.Command{
 }
 
 func init() {
-	BingImgDownloadCmd.Flags().StringP("uhd", "u", "only", "下载4K分辨率")
-	BingImgDownloadCmd.Flags().StringP("output", "o", "./", "保存路径")
-	BingImgDownloadCmd.Flags().Int8P("end-page", "e", 0, "结束的页面, 默认和page相同")
+	BingImgCmd.Flags().StringP("uhd", "u", "only", "下载4K分辨率")
+	BingImgCmd.Flags().StringP("output", "o", "./", "保存路径")
+	BingImgCmd.Flags().Int8P("end-page", "e", 0, "结束的页面, 默认和page相同")
 
-	BingImgWdbyte.Flags().StringP("output", "o", "./", "保存路径")
-	BingImgWdbyte.Flags().String("date", "", "日期, 例如: 2023-09")
+	BingImgWdbyteCmd.Flags().StringP("output", "o", "./", "保存路径")
+	BingImgWdbyteCmd.Flags().String("date", "", "日期, 例如: 2023-09")
 
+	FetchWallpaperCmd.AddCommand(BingImgCmd, BingImgWdbyteCmd)
 }

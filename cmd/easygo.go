@@ -40,7 +40,7 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "显示Debug信息")
 
 	rootCmd.AddCommand(
-		commands.BingImgDownloadCmd, commands.BingImgWdbyte,
+		commands.FetchWallpaperCmd,
 		commands.HttpDownloadCmd,
 		commands.SimpleHttpFS,
 		commands.IniCrud,
