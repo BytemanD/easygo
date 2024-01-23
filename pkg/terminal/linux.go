@@ -35,6 +35,6 @@ func CurTerminal() *Terminal {
 		return getLinuxTerminal()
 	default:
 		logging.Warning("get terminal for %s is not supported", runtime.GOOS)
-		return &Terminal{}
+		return nil
 	}
 }

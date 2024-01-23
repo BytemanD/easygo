@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	markdown "github.com/MichaelMure/go-term-markdown"
 	"github.com/spf13/cobra"
@@ -12,27 +14,39 @@ import (
 )
 
 var MDRender = &cobra.Command{
-	Use:   "md-render <file path>",
-	Short: "Markdown渲染",
-	Args:  cobra.ExactArgs(1),
+	Use:   "md-preview [file path]",
+	Short: "Markdown预览",
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fp := fileutils.FilePath{Path: args[0]}
-		content, err := fp.ReadAll()
-		if err != nil {
-			logging.Fatal("read from file %s failed", fp.Path)
+		var content string
+		var err error
+		var term *terminal.Terminal
+		if len(args) != 0 {
+			fp := fileutils.FilePath{Path: args[0]}
+			content, err = fp.ReadAll()
+			if err != nil {
+				logging.Fatal("read from file %s failed", fp.Path)
+			}
+			term = terminal.CurTerminal()
+		} else {
+			bytes, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				logging.Fatal("read from stdin failed")
+			}
+			content = string(bytes)
 		}
 
-		// width, _ := cmd.Flags().GetInt("width")
-		// leftAlign, _ := cmd.Flags().GetInt("left-align")
 		spredout, _ := cmd.Flags().GetBool("spredout")
-
 		columns, leftPad := 100, 4
-		terminal := terminal.CurTerminal()
-		if terminal != nil {
+		if term != nil {
 			if spredout {
-				columns, leftPad = terminal.Columns, 0
+				columns, leftPad = term.Columns, 0
 			} else {
-				columns, leftPad = terminal.Columns*2/3, terminal.Columns/6
+				columns, leftPad = term.Columns*2/3, term.Columns/6
+			}
+		} else {
+			if spredout {
+				leftPad = 0
 			}
 		}
 		result := markdown.Render(content, columns+leftPad, leftPad)
