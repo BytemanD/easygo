@@ -29,7 +29,6 @@ var MDRender = &cobra.Command{
 		columns, leftPad := 100, 4
 		terminal := terminal.CurTerminal()
 		if terminal != nil {
-			fmt.Println(terminal.Columns)
 			if spredout {
 				columns, leftPad = terminal.Columns, 0
 			} else {
