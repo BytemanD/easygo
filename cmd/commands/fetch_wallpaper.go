@@ -11,6 +11,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	httpLib "github.com/BytemanD/easygo/pkg/http"
 	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/cobra"
 )
@@ -114,6 +115,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		date, _ := cmd.Flags().GetString("date")
 		output, _ := cmd.Flags().GetString("output")
+		workers, _ := cmd.Flags().GetInt("workers")
 
 		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, date)
 		logging.Info("解析页面 %s", reqUrl)
@@ -132,7 +134,16 @@ var BingImgWdbyteCmd = &cobra.Command{
 			os.Exit(0)
 		}
 		downloader := httpLib.HttpDownloader{Output: output}
-		downloader.Download(files)
+		taskGroup := syncutils.TaskGroup{
+			Items:        files,
+			ShowProgress: true,
+			MaxWorker:    workers,
+			Func: func(item interface{}) error {
+				file := item.(httpLib.HttpFile)
+				return downloader.Download(file)
+			},
+		}
+		taskGroup.Start()
 	},
 }
 
@@ -142,6 +153,7 @@ func init() {
 	BingImgCmd.Flags().Int8P("end-page", "e", 0, "结束的页面, 默认和page相同")
 
 	BingImgWdbyteCmd.Flags().StringP("output", "o", "./", "保存路径")
+	BingImgWdbyteCmd.Flags().Int("workers", 0, "并发数")
 	BingImgWdbyteCmd.Flags().String("date", "", "日期, 例如: 2023-09")
 
 	FetchWallpaperCmd.AddCommand(BingImgCmd, BingImgWdbyteCmd)

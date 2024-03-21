@@ -22,32 +22,30 @@ type HttpDownloader struct {
 	Output string
 }
 
-func (downloader HttpDownloader) Download(files []HttpFile) error {
-	for _, file := range files {
-		if file.Name == "" {
-			urlParsed, err := url.Parse(file.Url)
-			if err != nil {
-				return err
-			}
-			_, file.Name = filepath.Split(urlParsed.Path)
-		}
-		logging.Debug("下载地址: %s", file.Url)
-		logging.Info("下载文件 %s", file.Name)
-		resp, err := http.Get(file.Url)
+func (downloader HttpDownloader) Download(file HttpFile) error {
+	if file.Name == "" {
+		urlParsed, err := url.Parse(file.Url)
 		if err != nil {
-			logging.Error("下载 %s 失败, %s", file.Url, err)
-		}
-		defer resp.Body.Close()
-		fp := fileutils.FilePath{Path: downloader.Output}
-		if err := fp.MakeDirs(); err != nil {
 			return err
 		}
-		outputPath := path.Join(downloader.Output, file.Name)
-		outputFile, _ := os.Create(outputPath)
-		defer outputFile.Close()
-		wt := bufio.NewWriter(outputFile)
-		io.Copy(wt, resp.Body)
-		wt.Flush()
+		_, file.Name = filepath.Split(urlParsed.Path)
 	}
+	logging.Debug("下载: %s -> %s", file.Url, file.Name)
+	resp, err := http.Get(file.Url)
+	if err != nil {
+		logging.Error("下载 %s 失败, %s", file.Url, err)
+	}
+	defer resp.Body.Close()
+	fp := fileutils.FilePath{Path: downloader.Output}
+	if err := fp.MakeDirs(); err != nil {
+		return err
+	}
+	outputPath := path.Join(downloader.Output, file.Name)
+	outputFile, _ := os.Create(outputPath)
+	defer outputFile.Close()
+	wt := bufio.NewWriter(outputFile)
+	io.Copy(wt, resp.Body)
+	logging.Debug("下载 %s 完成", file.Url)
+	wt.Flush()
 	return nil
 }
