@@ -46,6 +46,7 @@ func main() {
 		commands.IniCrud,
 		commands.ContainerImageSync,
 		commands.MDRender,
+		commands.Wget,
 	)
 
 	rootCmd.Execute()

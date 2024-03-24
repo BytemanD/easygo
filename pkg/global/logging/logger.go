@@ -44,6 +44,7 @@ func (logger *Logger) Debug(format string, args ...interface{}) {
 	if !logger.isLevelEnable(DEBUG) {
 		return
 	}
+	fmt.Print("\033[2K\r")
 	log.Printf(" %d DEBUG %s", os.Getpid(), fmt.Sprintf(format, args...))
 }
 
@@ -51,18 +52,21 @@ func (logger *Logger) Info(format string, args ...interface{}) {
 	if !logger.isLevelEnable(INFO) {
 		return
 	}
+	fmt.Print("\033[2K\r")
 	log.Printf("%d INFO %s", os.Getpid(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Warning(format string, args ...interface{}) {
 	if !logger.isLevelEnable(WARNING) {
 		return
 	}
+	fmt.Print("\033[2K\r")
 	log.Printf("%d WARNING %s", os.Getpid(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Error(format string, args ...interface{}) {
 	if !logger.isLevelEnable(ERROR) {
 		return
 	}
+	fmt.Print("\033[2K\r")
 	log.Printf("%d ERROR %s", os.Getpid(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Panic(err error) {

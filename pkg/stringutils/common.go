@@ -1,6 +1,7 @@
 package stringutils
 
 import (
+	"fmt"
 	"strings"
 
 	uuid "github.com/satori/go.uuid"
@@ -26,4 +27,20 @@ func IsUUID(s string) bool {
 
 func PathJoin(path ...string) string {
 	return strings.Join(path, "/")
+}
+
+const GB = 1 << 30
+const MB = 1 << 20
+const KB = 1 << 10
+
+func HumanBytes(size int) string {
+	if size >= GB {
+		return fmt.Sprintf("%.2f GB", float64(size)/GB)
+	} else if size >= MB {
+		return fmt.Sprintf("%.2f MB", float64(size)/MB)
+	} else if size >= KB {
+		return fmt.Sprintf("%.2f KB", float64(size)/KB)
+	} else {
+		return fmt.Sprintf("%.2f B", float64(size))
+	}
 }
