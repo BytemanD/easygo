@@ -9,15 +9,15 @@ var std = New()
 var MAX_ERROR_STACKS = 20
 
 func New() *Logger {
-	return &Logger{
-		Level:          ERROR,
-		MaxErrorStacks: MAX_ERROR_STACKS,
-	}
+	logger := NewLogger()
+	logger.IncrementCallerSkip()
+	return logger
 }
 
 type LogConfig struct {
 	Level          LogLevel
 	MaxErrorStacks int
+	EnableFileLine bool
 }
 
 func BasicConfig(config LogConfig) {
@@ -26,6 +26,9 @@ func BasicConfig(config LogConfig) {
 	}
 	if config.MaxErrorStacks > 0 {
 		std.SetMaxErrorStacks(config.MaxErrorStacks)
+	}
+	if config.EnableFileLine {
+		std.EnableFileLine()
 	}
 }
 

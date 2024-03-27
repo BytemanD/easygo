@@ -56,7 +56,7 @@ func bingImgDownload(page int8, uhd string, output string) {
 	logging.Info("开始下载, 保存路径: %s", output)
 	for link := links.Front(); link != nil; link = link.Next() {
 		logging.Debug("下载 %s", link.Value)
-		httpLib.Download(fmt.Sprintf("%s", link.Value), output)
+		httpLib.Download(fmt.Sprintf("%s", link.Value), output, false)
 	}
 }
 
@@ -140,9 +140,16 @@ var BingImgWdbyteCmd = &cobra.Command{
 			MaxWorker:    workers,
 			Func: func(item interface{}) error {
 				file := item.(httpLib.HttpFile)
-				return downloader.Download(file)
+				if err := downloader.Download(file); err != nil {
+					logging.Error("下载失败: %s", file.Url)
+					return err
+				} else {
+					logging.Info("下载完成: %s", file.Url)
+					return nil
+				}
 			},
 		}
+		logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
 		taskGroup.Start()
 	},
 }

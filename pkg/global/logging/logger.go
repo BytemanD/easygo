@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 )
 
@@ -21,6 +22,8 @@ type Logger struct {
 	Level          LogLevel
 	MaxErrorStacks int
 	Out            io.Writer
+	callerSkip     int
+	enableFileLine bool
 }
 
 func init() {
@@ -35,9 +38,26 @@ func (logger *Logger) isLevelEnable(logLevel LogLevel) bool {
 func (logger *Logger) SetLevel(logLevel LogLevel) {
 	logger.Level = logLevel
 }
+func (logger *Logger) EnableFileLine() {
+	logger.enableFileLine = true
+}
+
+func (logger *Logger) IncrementCallerSkip() {
+	logger.callerSkip += 1
+}
 
 func (logger *Logger) SetMaxErrorStacks(num int) {
 	logger.MaxErrorStacks = num
+}
+
+func (logger *Logger) prefix() string {
+	prefix := fmt.Sprintf("%d", os.Getpid())
+	if logger.enableFileLine {
+		_, file, line, _ := runtime.Caller(logger.callerSkip + 1)
+		shortFile := filepath.Base(file)
+		prefix += fmt.Sprintf(" %s:%d", shortFile, line)
+	}
+	return prefix
 }
 
 func (logger *Logger) Debug(format string, args ...interface{}) {
@@ -45,7 +65,7 @@ func (logger *Logger) Debug(format string, args ...interface{}) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf(" %d DEBUG %s", os.Getpid(), fmt.Sprintf(format, args...))
+	log.Printf("%s DEBUG %s", logger.prefix(), fmt.Sprintf(format, args...))
 }
 
 func (logger *Logger) Info(format string, args ...interface{}) {
@@ -53,27 +73,27 @@ func (logger *Logger) Info(format string, args ...interface{}) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%d INFO %s", os.Getpid(), fmt.Sprintf(format, args...))
+	log.Printf("%s INFO %s", logger.prefix(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Warning(format string, args ...interface{}) {
 	if !logger.isLevelEnable(WARNING) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%d WARNING %s", os.Getpid(), fmt.Sprintf(format, args...))
+	log.Printf("%s WARNING %s", logger.prefix(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Error(format string, args ...interface{}) {
 	if !logger.isLevelEnable(ERROR) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%d ERROR %s", os.Getpid(), fmt.Sprintf(format, args...))
+	log.Printf("%s ERROR %s", logger.prefix(), fmt.Sprintf(format, args...))
 }
 func (logger *Logger) Panic(err error) {
 	log.Panic(err)
 }
 func (logger *Logger) Exception(err error) {
-	logger.Error("%d Exception: %+v", os.Getpid(), err)
+	logger.Error("%s Exception: %+v", logger.prefix(), err)
 	for i := 1; i <= logger.MaxErrorStacks; i++ {
 		pc, file, line, _ := runtime.Caller(i)
 		method := runtime.FuncForPC(pc)
@@ -86,4 +106,13 @@ func (logger *Logger) Exception(err error) {
 			break
 		}
 	}
+}
+
+func NewLogger() *Logger {
+	logger := &Logger{
+		Level:          ERROR,
+		MaxErrorStacks: MAX_ERROR_STACKS,
+		callerSkip:     1,
+	}
+	return logger
 }

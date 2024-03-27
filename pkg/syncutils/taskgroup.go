@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/cheggaaa/pb/v3"
+	"github.com/BytemanD/easygo/pkg/progress"
 )
 
 type TaskGroup struct {
@@ -28,9 +28,9 @@ func (g TaskGroup) Start() error {
 		g.MaxWorker = runtime.NumCPU()
 	}
 	workers := make(chan struct{}, g.MaxWorker)
-	var bar *pb.ProgressBar
+	var bar *progress.ProgressBar
 	if g.ShowProgress {
-		bar = pb.StartNew(value.Len())
+		bar = progress.NewProgressBar(value.Len())
 	} else {
 		bar = nil
 	}
@@ -40,14 +40,15 @@ func (g TaskGroup) Start() error {
 			workers <- struct{}{}
 			g.Func(o)
 			if bar != nil {
-				bar.Increment()
+				// bar.Increment()
+				bar.Increment(1)
 			}
 			<-workers
 		}(value.Index(i).Interface(), g.wg)
 	}
 	g.wg.Wait()
 	if bar != nil {
-		bar.Finish()
+		bar.Wait()
 	}
 	return nil
 }

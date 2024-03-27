@@ -10,11 +10,14 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/progress"
+	"github.com/BytemanD/easygo/pkg/stringutils"
+	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -47,7 +50,7 @@ func GetLinks(url string, regex string) list.List {
 	return *links
 }
 
-func Download(url string, output string) error {
+func Download(url string, output string, showProgress bool) error {
 	_, fileName := filepath.Split(url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -66,37 +69,53 @@ func Download(url string, output string) error {
 	outputFile, _ := os.Create(outputPath)
 	defer outputFile.Close()
 
-	wt := bufio.NewWriter(outputFile)
-	io.Copy(wt, resp.Body)
-	wt.Flush()
+	var writer io.Writer
+	if showProgress {
+		size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+		logging.Info("size: %s", stringutils.HumanBytes(size))
+		pw := progress.NewProgressWriter(outputFile, size)
+		defer pw.Flush()
+		defer pw.Wait()
+		writer = pw
+	} else {
+		wt := bufio.NewWriter(outputFile)
+		defer wt.Flush()
+		writer = wt
+	}
+
+	io.Copy(writer, resp.Body)
 	return nil
 }
 
 func DownloadLinksInHtml(url string, regex string, output string) {
+	logging.Info("开始解析: %s", url)
 	links := GetLinks(url, regex)
 
-	var (
-		wg sync.WaitGroup
-	)
-	link := links.Front()
-	wg.Add(links.Len())
 	logging.Info("链接数量: %d", links.Len())
-	if links.Len() > 0 {
-		logging.Info("开始下载")
+	if links.Len() <= 0 {
+		os.Exit(0)
 	}
+	downloadLinks := []string{}
+	link := links.Front()
 	for i := 0; i < links.Len(); i++ {
-		go func(aaa list.Element) {
-			Download(fmt.Sprintf("%s", aaa.Value), output)
-			logging.Debug("下载完成: %s ", aaa.Value)
-			wg.Done()
-		}(*link)
+		downloadLinks = append(downloadLinks, fmt.Sprintf("%s", link.Value))
 		link = link.Next()
-		if link == nil {
-			break
-		}
 	}
-	wg.Wait()
-	if links.Len() > 0 {
-		logging.Info("下载完成")
+	taskGroup := syncutils.TaskGroup{
+		Items:        downloadLinks,
+		ShowProgress: true,
+		Func: func(item interface{}) error {
+			url := item.(string)
+			if err := Download(url, output, false); err != nil {
+				logging.Error("下载失败: %s", url)
+				return err
+			} else {
+				logging.Info("下载完成: %s", url)
+				return nil
+			}
+		},
 	}
+	logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
+	taskGroup.Start()
+	logging.Info("下载完成")
 }

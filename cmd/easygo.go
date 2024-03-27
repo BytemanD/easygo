@@ -33,7 +33,7 @@ func main() {
 			if debug {
 				level = logging.DEBUG
 			}
-			logging.BasicConfig(logging.LogConfig{Level: level})
+			logging.BasicConfig(logging.LogConfig{Level: level, EnableFileLine: true})
 		},
 	}
 
@@ -41,7 +41,7 @@ func main() {
 
 	rootCmd.AddCommand(
 		commands.FetchWallpaperCmd,
-		commands.HttpDownloadCmd,
+		commands.WgetLinks,
 		commands.SimpleHttpFS,
 		commands.IniCrud,
 		commands.ContainerImageSync,

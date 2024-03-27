@@ -2,17 +2,16 @@ package commands
 
 import (
 	"bufio"
-	"io"
-	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"strconv"
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/http"
+
 	"github.com/BytemanD/easygo/pkg/progress"
 	"github.com/BytemanD/easygo/pkg/stringutils"
-	"github.com/spf13/cobra"
 )
 
 type ProgressWriter struct {
@@ -36,34 +35,38 @@ var Wget = &cobra.Command{
 		url := args[0]
 		output, _ := cmd.Flags().GetString("output")
 
-		resp, err := http.Get(url)
+		logging.Info("saving to %s", output)
+		err := http.Download(url, output, true)
 		if err != nil {
-			logging.Error("get %s failed: %s", url, err)
+			logging.Error("download %s failed: %s", url, err)
 			return
 		}
-		size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-		_, fileName := filepath.Split(url)
-		err = os.MkdirAll(output, os.ModePerm)
-		if err != nil {
-			logging.Error("make dir %s failed: %s", outputPath, err)
-			return
+		logging.Info("saved to %s", output)
+	},
+}
+var WgetLinks = &cobra.Command{
+	Use:   "wget-links <url>",
+	Short: "下载网页上的链接",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+			return err
 		}
-		outputPath := path.Join(output, fileName)
-		outputFile, err := os.Create(outputPath)
-		if err != nil {
-			logging.Error("create %s failed: %s", outputPath, err)
-			return
+		if err := stringutils.MustMatch(args[0], "^http(s)*://.+"); err != nil {
+			return fmt.Errorf("invalid flag 'url': %s", err)
 		}
-		defer outputFile.Close()
-
-		logging.Info("size: %s", stringutils.HumanBytes(size))
-		logging.Info("saving to %s", outputPath)
-		writer := progress.NewProgressWriter(outputFile, size)
-		io.Copy(writer, resp.Body)
+		return nil
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		url := strings.TrimRight(args[0], "/")
+		regex, _ := cmd.Flags().GetString("regex")
+		output, _ := cmd.Flags().GetString("output")
+		http.DownloadLinksInHtml(url, regex, output)
 	},
 }
 
 func init() {
 	Wget.Flags().StringP("output", "O", "./", "保存路径")
 
+	WgetLinks.Flags().StringP("regex", "r", "", "匹配正则表达式，例如: .rpm")
+	WgetLinks.Flags().StringP("output", "o", "./", "保存路径")
 }

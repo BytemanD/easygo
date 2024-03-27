@@ -5,4 +5,5 @@ go 1.15
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/cheggaaa/pb/v3 v3.1.5
+	github.com/go-ini/ini v1.67.0
 )
