@@ -1,6 +1,8 @@
 package stringutils
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -43,4 +45,11 @@ func HumanBytes(size int) string {
 	} else {
 		return fmt.Sprintf("%.2f B", float64(size))
 	}
+}
+
+func JsonDumpsIndent(v interface{}) (string, error) {
+	jsonBytes, _ := json.Marshal(v)
+	var buffer bytes.Buffer
+	json.Indent(&buffer, jsonBytes, "", "  ")
+	return buffer.String(), nil
 }
