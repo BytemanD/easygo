@@ -22,7 +22,11 @@ import (
 )
 
 func GetHtml(url string) goquery.Document {
-	resp, _ := http.Get(url)
+	resp, err := http.Get(url)
+	if err != nil {
+		logging.Warning("get url failed: %s", err)
+		return goquery.Document{}
+	}
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
 	return *doc
 }

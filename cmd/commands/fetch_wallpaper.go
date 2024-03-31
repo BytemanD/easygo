@@ -12,6 +12,7 @@ import (
 	httpLib "github.com/BytemanD/easygo/pkg/http"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
+	"github.com/BytemanD/easygo/pkg/table"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/spf13/cobra"
 )
@@ -133,6 +134,12 @@ var BingImgWdbyteCmd = &cobra.Command{
 			logging.Warning("页面 %s 无图片链接", reqUrl)
 			os.Exit(0)
 		}
+		type webFile struct {
+			Name   string
+			Size   int
+			Result string
+		}
+		webFiles := []webFile{}
 		downloader := httpLib.HttpDownloader{Output: output}
 		taskGroup := syncutils.TaskGroup{
 			Items:        files,
@@ -140,17 +147,27 @@ var BingImgWdbyteCmd = &cobra.Command{
 			MaxWorker:    workers,
 			Func: func(item interface{}) error {
 				file := item.(httpLib.HttpFile)
-				if err := downloader.Download(file); err != nil {
+				if err := downloader.Download(&file); err != nil {
 					logging.Error("下载失败: %s", file.Url)
+					webFiles = append(webFiles, webFile{Name: file.Name, Size: file.GetSize(), Result: "😞"})
 					return err
 				} else {
-					logging.Info("下载完成: %s", file.Url)
+					logging.Info("下载完成: %s, Size: %d", file.Name, file.GetSize())
+					webFiles = append(webFiles, webFile{Name: file.Name, Size: file.GetSize(), Result: "👌"})
 					return nil
 				}
 			},
 		}
 		logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
 		taskGroup.Start()
+
+		t := table.ItemsTable{
+			Headers:   []table.H{{Title: "Result"}, {Title: "Name"}, {Title: "Size"}},
+			Items:     webFiles,
+			AutoIndex: true,
+		}
+		result, _ := t.Render()
+		fmt.Println(result)
 	},
 }
 
