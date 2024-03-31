@@ -3,6 +3,7 @@ package table
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -16,6 +17,7 @@ type ItemsTable struct {
 	columnsWidth []int
 	style        Style
 	InlineBorder bool
+	AutoIndex    bool
 }
 
 func (t *ItemsTable) SetStyle(style Style) {
@@ -107,8 +109,15 @@ func (t ItemsTable) Render() string {
 	if t.style == nil {
 		t.SetStyle(StyleDefault)
 	}
+
+	if t.AutoIndex {
+		t.Headers = append([]H{{Title: "#", isIndex: true}}, t.Headers...)
+		t.columnsWidth = make([]int, len(t.Headers)+1)
+	} else {
+		t.columnsWidth = make([]int, len(t.Headers))
+	}
 	itemsValue := reflect.ValueOf(t.Items)
-	t.columnsWidth = make([]int, len(t.Headers))
+
 	rows := [][]string{t.header()}
 	borderPosition := map[int]bool{}
 	for i := 0; i < itemsValue.Len(); i++ {
@@ -116,6 +125,10 @@ func (t ItemsTable) Render() string {
 
 		tmpRows := []string{}
 		for _, h := range t.Headers {
+			if h.isIndex {
+				tmpRows = append(tmpRows, strconv.Itoa(i+1))
+				continue
+			}
 			itemField := item.FieldByName(h.field())
 			tmpRows = append(tmpRows, fmt.Sprintf("%v", itemField))
 		}
@@ -134,7 +147,7 @@ func (t ItemsTable) Render() string {
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		lines = append(lines, t.bodyRow(row))
-		if t.InlineBorder && i < len(rows)-2 && borderPosition[i] {
+		if t.InlineBorder && i < len(rows)-1 && borderPosition[i] {
 			lines = append(lines, t.inlineBorder())
 		}
 	}

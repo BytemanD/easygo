@@ -12,14 +12,16 @@ type Human struct {
 }
 
 var humans = []Human{
-	{ID: 1, Name: "Olivia Thompson"},
-	{ID: 2, Name: "张三"},
-	{ID: 3, Name: "●●！"},
-	{ID: 4, Name: "ｎａｍｅ4"},
-	{ID: 5, Name: "😊"},
-	{ID: 6, Name: "Charlotte\nWilliams"},
-	{ID: 7, Name: "Alexander\nGreen"},
-	{ID: 8, Name: strings.Repeat("我！hello", 10)},
+	{ID: 111, Name: "Olivia Thompson"},
+	{ID: 222, Name: "张三"},
+	{ID: 333, Name: "●●！"},
+	{ID: 444, Name: "ｎａｍｅ4", Age: 10},
+	{ID: 555, Name: "😊"},
+	{ID: 666, Name: "Charlotte\nWilliams"},
+	{ID: 777, Name: "Alexander\nGreen"},
+	{ID: 888, Name: strings.Repeat("我！hello", 10)},
+	{ID: 999, Name: "李四"},
+	{ID: 101010, Name: "王五"},
 }
 
 func TestItemsTableDefault(t *testing.T) {
@@ -31,24 +33,25 @@ func TestItemsTableDefault(t *testing.T) {
 		},
 		Items: humans,
 	}
-	expect := `+---------------------------------------+
-| ID | Name                       | age |
-+----+----------------------------+-----+
-| 1  | Olivia Thompson            | 0   |
-| 2  | 张三                       | 0   |
-| 3  | ●●！                       | 0   |
-| 4  | ｎａｍｅ4                  | 0   |
-| 5  | 😊                         | 0   |
-| 6  | Charlotte                  | 0   |
-|    | Williams                   |     |
-| 7  | Alexander                  | 0   |
-|    | Green                      |     |
-| 8  | 我！hello我！hello我！hell | 0   |
-|    | o我！hello我！hello我！hel |     |
-|    | lo我！hello我！hello我！he |     |
-|    | llo我！hello               |     |
-+----+----------------------------+-----+`
-
+	expect := `+--------+----------------------------+-----+
+| ID     | Name                       | age |
++--------+----------------------------+-----+
+| 111    | Olivia Thompson            | 0   |
+| 222    | 张三                       | 0   |
+| 333    | ●●！                       | 0   |
+| 444    | ｎａｍｅ4                  | 10  |
+| 555    | 😊                         | 0   |
+| 666    | Charlotte                  | 0   |
+|        | Williams                   |     |
+| 777    | Alexander                  | 0   |
+|        | Green                      |     |
+| 888    | 我！hello我！hello我！hell | 0   |
+|        | o我！hello我！hello我！hel |     |
+|        | lo我！hello我！hello我！he |     |
+|        | llo我！hello               |     |
+| 999    | 李四                       | 0   |
+| 101010 | 王五                       | 0   |
++--------+----------------------------+-----+`
 	result := itemsTable.Render()
 	t.Logf("result:\n%v", result)
 	if result != expect {
@@ -56,7 +59,87 @@ func TestItemsTableDefault(t *testing.T) {
 		return
 	}
 }
-
+func TestItemsTableInlineBorder(t *testing.T) {
+	itemsTable := ItemsTable{
+		Headers: []H{
+			{Field: "ID"},
+			{Title: "Name", MaxWidth: 20},
+			{Title: "age", Field: "Age"},
+		},
+		Items:        humans,
+		InlineBorder: true,
+	}
+	expect := `+--------+----------------------------+-----+
+| ID     | Name                       | age |
++--------+----------------------------+-----+
+| 111    | Olivia Thompson            | 0   |
++--------+----------------------------+-----+
+| 222    | 张三                       | 0   |
++--------+----------------------------+-----+
+| 333    | ●●！                       | 0   |
++--------+----------------------------+-----+
+| 444    | ｎａｍｅ4                  | 10  |
++--------+----------------------------+-----+
+| 555    | 😊                         | 0   |
++--------+----------------------------+-----+
+| 666    | Charlotte                  | 0   |
+|        | Williams                   |     |
++--------+----------------------------+-----+
+| 777    | Alexander                  | 0   |
+|        | Green                      |     |
++--------+----------------------------+-----+
+| 888    | 我！hello我！hello我！hell | 0   |
+|        | o我！hello我！hello我！hel |     |
+|        | lo我！hello我！hello我！he |     |
+|        | llo我！hello               |     |
++--------+----------------------------+-----+
+| 999    | 李四                       | 0   |
++--------+----------------------------+-----+
+| 101010 | 王五                       | 0   |
++--------+----------------------------+-----+`
+	result := itemsTable.Render()
+	t.Logf("result:\n%v", result)
+	if result != expect {
+		t.Errorf("itemsTable.Render() = \n%v, not \n%v", result, expect)
+		return
+	}
+}
+func TestItemsTableAutoIndex(t *testing.T) {
+	itemsTable := ItemsTable{
+		Headers: []H{
+			{Field: "ID"},
+			{Title: "Name", MaxWidth: 20},
+			{Title: "age", Field: "Age"},
+		},
+		Items:     humans,
+		AutoIndex: true,
+	}
+	expect := `+----+--------+----------------------------+-----+
+| #  | ID     | Name                       | age |
++----+--------+----------------------------+-----+
+| 1  | 111    | Olivia Thompson            | 0   |
+| 2  | 222    | 张三                       | 0   |
+| 3  | 333    | ●●！                       | 0   |
+| 4  | 444    | ｎａｍｅ4                  | 10  |
+| 5  | 555    | 😊                         | 0   |
+| 6  | 666    | Charlotte                  | 0   |
+|    |        | Williams                   |     |
+| 7  | 777    | Alexander                  | 0   |
+|    |        | Green                      |     |
+| 8  | 888    | 我！hello我！hello我！hell | 0   |
+|    |        | o我！hello我！hello我！hel |     |
+|    |        | lo我！hello我！hello我！he |     |
+|    |        | llo我！hello               |     |
+| 9  | 999    | 李四                       | 0   |
+| 10 | 101010 | 王五                       | 0   |
++----+--------+----------------------------+-----+`
+	result := itemsTable.Render()
+	t.Logf("result:\n%v", result)
+	if result != expect {
+		t.Errorf("itemsTable.Render() = \n%v, not \n%v", result, expect)
+		return
+	}
+}
 func BenchmarkItemsTable(b *testing.B) {
 	items := []Human{}
 	for i := 0; i <= b.N; i++ {

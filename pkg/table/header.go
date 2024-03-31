@@ -5,6 +5,7 @@ type H struct {
 	Field    string
 	Color    bool
 	MaxWidth int
+	isIndex  bool
 }
 
 func (h H) title() string {
