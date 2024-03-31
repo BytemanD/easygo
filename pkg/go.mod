@@ -9,6 +9,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.5.6
 	github.com/satori/go.uuid v1.2.0
 	github.com/wxnacy/wgo v1.0.4
+	golang.org/x/text v0.14.0
 )
 
 require (
@@ -20,6 +21,5 @@ require (
 	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

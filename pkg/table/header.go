@@ -1,9 +1,10 @@
 package table
 
 type H struct {
-	Title string
-	Field string
-	Color bool
+	Title    string
+	Field    string
+	Color    bool
+	MaxWidth int
 }
 
 func (h H) title() string {

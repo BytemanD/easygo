@@ -20,3 +20,20 @@ func Range(args ...int) []int {
 	}
 	return items
 }
+
+// Parse string list to substrings
+//
+// e.g. if size is 2:
+//
+//	["a" "b" "c"]         -> ["a" "b"] ["c"]
+//	["a" "b" "c" "d"]     -> ["a" "b"] ["c" "d"]
+//	["a" "b" "c" "d" "e"] -> ["a" "b"] ["c" "d"] ["e"]
+func SplitStrings(array []string, size int) [][]string {
+	result := [][]string{}
+	start := 0
+	for i := 0; i < (len(array)+size-1)/size; i++ {
+		result = append(result, array[start:min(len(array), start+size)])
+		start += size
+	}
+	return result
+}

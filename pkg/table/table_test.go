@@ -2,6 +2,7 @@ package table
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -12,21 +13,21 @@ type Human struct {
 }
 
 var humans = []Human{
-	{ID: 1, Name: "Jack"},
+	{ID: 1, Name: "Olivia Thompson"},
 	{ID: 2, Name: "张三"},
-	{ID: 3, Name: "●●"},
+	{ID: 3, Name: "●●！"},
 	{ID: 4, Name: "ｎａｍｅ4"},
 	{ID: 5, Name: "😊"},
-	{ID: 6, Name: "name\n6"},
-	{ID: 7, Name: "name\n7"},
-	// {ID: 2, Name: strings.Repeat("name3", 100)},
+	{ID: 6, Name: "Charlotte\nWilliams"},
+	{ID: 7, Name: "Alexander\nGreen"},
+	{ID: 8, Name: strings.Repeat("我！hello", 10)},
 }
 
 func TestItemsTable(t *testing.T) {
 	itemsTable := ItemsTable{
 		Headers: []H{
 			{Field: "ID"},
-			{Title: "Name", Color: true},
+			{Title: "Name", Color: true, MaxWidth: 20},
 			{Title: "age", Field: "Age"},
 		},
 		Items: humans,

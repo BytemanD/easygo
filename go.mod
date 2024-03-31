@@ -18,9 +18,7 @@ require (
 
 require (
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
-	github.com/VividCortex/ewma v1.2.0 // indirect
 	github.com/alecthomas/chroma v0.7.1 // indirect
-	github.com/cheggaaa/pb/v3 v3.1.5 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.1.6 // indirect
@@ -28,7 +26,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20230922112808-5421fefb8386 // indirect
-	github.com/jedib0t/go-pretty/v6 v6.5.6 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kyokomi/emoji/v2 v2.2.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -36,10 +34,10 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/wxnacy/wgo v1.0.4 // indirect
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
 	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 )
 
 replace github.com/BytemanD/easygo/pkg => ./pkg

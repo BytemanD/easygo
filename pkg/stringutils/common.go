@@ -92,3 +92,26 @@ func TextWidth(s string) int {
 	}
 	return w
 }
+
+// Parse a string to substrings
+//
+// e.g. if width is 2:
+//
+//	"a"    -> ["a"]
+//	"abc"  -> ["ab", "c"]
+//	"abcd" -> ["ab", "cd"]
+func SubStrings(s string, width int) []string {
+	result := []string{}
+	subS := []rune{}
+	for _, r := range s {
+		subS = append(subS, r)
+		if len(subS) >= width {
+			result = append(result, string(subS))
+			subS = []rune{}
+		}
+	}
+	if len(subS) != 0 {
+		result = append(result, string(subS))
+	}
+	return result
+}

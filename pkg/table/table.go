@@ -54,7 +54,7 @@ func (t ItemsTable) topBorder() string {
 		t.style[0], strings.Join(columes, t.style[1]), t.style[2],
 	)
 }
-func (t ItemsTable) centerBorder() string {
+func (t ItemsTable) inlineBorder() string {
 	columes := []string{}
 	for i := range t.Headers {
 		columes = append(columes, strings.Repeat(t.style[9], t.columnsWidth[i]+2))
@@ -72,52 +72,70 @@ func (t ItemsTable) bottomBorder() string {
 		t.style[6], strings.Join(columes, t.style[7]), t.style[8],
 	)
 }
-func (t ItemsTable) parseToRows(row []string) [][]string {
+func (t *ItemsTable) parseToRows(row []string) [][]string {
 	rows := [][]string{}
+
 	for x, column := range row {
 		lines := strings.Split(column, "\n")
 		for y, line := range lines {
-			if len(rows) <= y {
-				rows = append(rows, make([]string, len(row)))
+			var subColumes []string
+			// 如果设置了MaxWidth, 分割字符串
+			if x < len(t.Headers) && t.Headers[x].MaxWidth != 0 {
+				subColumes = stringutils.SubStrings(line, t.Headers[x].MaxWidth)
+			} else {
+				subColumes = []string{column}
 			}
-			rows[y][x] = line
-			y++
+			for _, subColume := range subColumes {
+				if len(rows) <= y {
+					rows = append(rows, make([]string, len(row)))
+				}
+				rows[y][x] = subColume
+				y++
+			}
 		}
 	}
 	return rows
 }
-
+func (t ItemsTable) header() []string {
+	header := make([]string, len(t.Headers))
+	for i, h := range t.Headers {
+		header[i] = h.title()
+	}
+	return header
+}
 func (t ItemsTable) Render() string {
 	itemsValue := reflect.ValueOf(t.Items)
-	rows := make([][]string, itemsValue.Len())
-	rowHeader := make([]string, len(t.Headers))
 	t.columnsWidth = make([]int, len(t.Headers))
-	for i, h := range t.Headers {
-		rowHeader[i] = h.title()
-		t.columnsWidth[i] = max(t.columnsWidth[i], stringutils.TextWidth(h.title()))
-	}
+	rows := [][]string{t.header()}
+	borderPosition := map[int]bool{}
 	for i := 0; i < itemsValue.Len(); i++ {
 		item := itemsValue.Index(i)
-		for j, h := range t.Headers {
+
+		tmpRows := []string{}
+		for _, h := range t.Headers {
 			itemField := item.FieldByName(h.field())
-			rows[i] = append(rows[i], fmt.Sprintf("%v", itemField))
-			itemValue := fmt.Sprintf("%v", itemField)
-			t.columnsWidth[j] = max(t.columnsWidth[j], stringutils.TextWidth(itemValue))
+			tmpRows = append(tmpRows, fmt.Sprintf("%v", itemField))
+		}
+		rows = append(rows, t.parseToRows(tmpRows)...)
+		borderPosition[len(rows)-1] = true
+	}
+	// 计算每列合适的宽度
+	for _, row := range rows {
+		for x, column := range row {
+			t.columnsWidth[x] = max(t.columnsWidth[x], stringutils.TextWidth(column))
+		}
+	}
+	// t.fixMaxWidth()
+	// 渲染
+	lines := []string{t.topBorder(), t.headerRow(rows[0]), t.inlineBorder()}
+	for i := 1; i < len(rows); i++ {
+		row := rows[i]
+		lines = append(lines, t.bodyRow(row))
+		if t.InlineBorder && i < len(rows)-2 && borderPosition[i] {
+			lines = append(lines, t.inlineBorder())
 		}
 	}
 
-	lines := []string{
-		t.topBorder(), t.headerRow(rowHeader), t.centerBorder(),
-	}
-	for i, row := range rows {
-		for _, newRow := range t.parseToRows(row) {
-			lines = append(lines, t.bodyRow(newRow))
-		}
-		if t.InlineBorder && i < len(rows)-1 {
-			lines = append(lines, t.centerBorder())
-		}
-	}
 	lines = append(lines, t.bottomBorder())
-
 	return strings.Join(lines, "\n")
 }
