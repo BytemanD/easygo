@@ -14,12 +14,14 @@ type ItemsTable struct {
 	Headers      []H
 	Items        interface{}
 	columnsWidth []int
-	style        []string
+	style        Style
+	InlineBorder bool
 }
 
-func (t *ItemsTable) SetStyle(style []string) {
+func (t *ItemsTable) SetStyle(style Style) {
 	t.style = style
 }
+
 func (t ItemsTable) rowString(row []string, enableColor bool) string {
 	columes := []string{}
 	for i, column := range row {
@@ -70,6 +72,20 @@ func (t ItemsTable) bottomBorder() string {
 		t.style[6], strings.Join(columes, t.style[7]), t.style[8],
 	)
 }
+func (t ItemsTable) parseToRows(row []string) [][]string {
+	rows := [][]string{}
+	for x, column := range row {
+		lines := strings.Split(column, "\n")
+		for y, line := range lines {
+			if len(rows) <= y {
+				rows = append(rows, make([]string, len(row)))
+			}
+			rows[y][x] = line
+			y++
+		}
+	}
+	return rows
+}
 
 func (t ItemsTable) Render() string {
 	itemsValue := reflect.ValueOf(t.Items)
@@ -93,10 +109,15 @@ func (t ItemsTable) Render() string {
 	lines := []string{
 		t.topBorder(), t.headerRow(rowHeader), t.centerBorder(),
 	}
-	for _, row := range rows {
-		lines = append(lines, t.bodyRow(row))
+	for i, row := range rows {
+		for _, newRow := range t.parseToRows(row) {
+			lines = append(lines, t.bodyRow(newRow))
+		}
+		if t.InlineBorder && i < len(rows)-1 {
+			lines = append(lines, t.centerBorder())
+		}
 	}
 	lines = append(lines, t.bottomBorder())
-	fmt.Println(t.columnsWidth)
+
 	return strings.Join(lines, "\n")
 }

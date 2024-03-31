@@ -1,5 +1,7 @@
 package table
 
+type Style []string
+
 // StyleDefault renders a table like below:
 //
 //	+----+-------+-----+
@@ -8,10 +10,10 @@ package table
 //	| 1  | name1 | 1   |
 //	| 2  | name2 | 10  |
 //	+----+-------+-----+
-var StyleDefault = []string{
+var StyleDefault = Style{
 	"+", "-", "+",
 	"+", "+", "+",
-	"+", "-", "+",
+	"+", "+", "+",
 	"-", "|",
 }
 
@@ -23,7 +25,7 @@ var StyleDefault = []string{
 //	│ 1  │ name1 │ 1   │
 //	│ 2  │ name2 │ 10  │
 //	└────┴───────┴─────┘
-var StyleLight = []string{
+var StyleLight = Style{
 	"┌", "┬", "┐",
 	"├", "┼", "┤",
 	"└", "┴", "┘",
@@ -38,7 +40,7 @@ var StyleLight = []string{
 //	│ 1  │ name1 │ 1   │
 //	│ 2  │ name2 │ 10  │
 //	╰────┴───────┴─────╯
-var StyleRounded = []string{
+var StyleRounded = Style{
 	"╭", "┬", "╮",
 	"├", "┼", "┤",
 	"╰", "┴", "╯",
@@ -53,7 +55,7 @@ var StyleRounded = []string{
 //	┃ 1  ┃ name1 ┃ 1   ┃
 //	┃ 2  ┃ name2 ┃ 10  ┃
 //	┗━━━━┻━━━━━━━┻━━━━━┛
-var StyleBold = []string{
+var StyleBold = Style{
 	"┏", "┳", "┓",
 	"┣", "╋", "┫",
 	"┗", "┻", "┛",
@@ -68,7 +70,7 @@ var StyleBold = []string{
 //	┃ 1  ┃ name1 ┃ 1   ┃
 //	┃ 2  ┃ name2 ┃ 10  ┃
 //	┗━━━━┻━━━━━━━┻━━━━━┛
-var StyleDouble = []string{
+var StyleDouble = Style{
 	"╔", "╦", "╗",
 	"╠", "╬", "╣",
 	"╚", "╩", "╝",
