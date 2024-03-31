@@ -52,7 +52,7 @@ func TestItemsTableDefault(t *testing.T) {
 | 999    | 李四                       | 0   |
 | 101010 | 王五                       | 0   |
 +--------+----------------------------+-----+`
-	result := itemsTable.Render()
+	result, _ := itemsTable.Render()
 	t.Logf("result:\n%v", result)
 	if result != expect {
 		t.Errorf("itemsTable.Render() = \n%v, not \n%v", result, expect)
@@ -97,8 +97,8 @@ func TestItemsTableInlineBorder(t *testing.T) {
 +--------+----------------------------+-----+
 | 101010 | 王五                       | 0   |
 +--------+----------------------------+-----+`
-	result := itemsTable.Render()
-	t.Logf("result:\n%v", result)
+	result, e := itemsTable.Render()
+	t.Logf("result:\n%v %v", result, e)
 	if result != expect {
 		t.Errorf("itemsTable.Render() = \n%v, not \n%v", result, expect)
 		return
@@ -133,7 +133,7 @@ func TestItemsTableAutoIndex(t *testing.T) {
 | 9  | 999    | 李四                       | 0   |
 | 10 | 101010 | 王五                       | 0   |
 +----+--------+----------------------------+-----+`
-	result := itemsTable.Render()
+	result, _ := itemsTable.Render()
 	t.Logf("result:\n%v", result)
 	if result != expect {
 		t.Errorf("itemsTable.Render() = \n%v, not \n%v", result, expect)

@@ -105,7 +105,11 @@ func (t ItemsTable) header() []string {
 	}
 	return header
 }
-func (t ItemsTable) Render() string {
+func (t ItemsTable) Render() (string, error) {
+	itemsValue := reflect.ValueOf(t.Items)
+	if itemsValue.Kind() != reflect.Slice && itemsValue.Kind() != reflect.Array {
+		return "", fmt.Errorf("items must be Slice or Array type")
+	}
 	if t.style == nil {
 		t.SetStyle(StyleDefault)
 	}
@@ -116,12 +120,14 @@ func (t ItemsTable) Render() string {
 	} else {
 		t.columnsWidth = make([]int, len(t.Headers))
 	}
-	itemsValue := reflect.ValueOf(t.Items)
 
 	rows := [][]string{t.header()}
 	borderPosition := map[int]bool{}
 	for i := 0; i < itemsValue.Len(); i++ {
 		item := itemsValue.Index(i)
+		if item.Kind() != reflect.Struct {
+			return "", fmt.Errorf("render failed, item is not Struct type")
+		}
 
 		tmpRows := []string{}
 		for _, h := range t.Headers {
@@ -130,6 +136,10 @@ func (t ItemsTable) Render() string {
 				continue
 			}
 			itemField := item.FieldByName(h.field())
+			if !itemField.IsValid() {
+				tmpRows = append(tmpRows, "")
+				continue
+			}
 			tmpRows = append(tmpRows, fmt.Sprintf("%v", itemField))
 		}
 		rows = append(rows, t.parseToRows(tmpRows)...)
@@ -153,5 +163,5 @@ func (t ItemsTable) Render() string {
 	}
 
 	lines = append(lines, t.bottomBorder())
-	return strings.Join(lines, "\n")
+	return strings.Join(lines, "\n"), nil
 }
