@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	uuid "github.com/satori/go.uuid"
+	"golang.org/x/text/width"
 )
 
 func ContainsString(stringList []string, s string) bool {
@@ -52,4 +55,40 @@ func JsonDumpsIndent(v interface{}) (string, error) {
 	var buffer bytes.Buffer
 	json.Indent(&buffer, jsonBytes, "", "  ")
 	return buffer.String(), nil
+}
+func FormatLen(s string) int {
+	length := len(s)
+	for _, r := range s {
+		fmt.Println("RuneLen", utf8.RuneLen(r))
+		if (r >= 0xFF10 && r <= 0xFF19) || (r >= 0xFF01 && r <= 0xFF60) {
+			length -= 1
+			continue
+		}
+		if unicode.Is(unicode.Han, r) {
+			length -= 1
+			continue
+		}
+		if r >= 0x1F300 {
+			length -= 3
+			continue
+		}
+		if unicode.Is(unicode.Symbol, r) {
+			length -= 2
+			continue
+		}
+	}
+	return length
+}
+func TextWidth(s string) int {
+	w := 0
+	for _, r := range s {
+		switch width.LookupRune(r).Kind() {
+		case width.EastAsianFullwidth, width.EastAsianWide:
+			w += 2
+		case width.EastAsianHalfwidth, width.EastAsianNarrow,
+			width.Neutral, width.EastAsianAmbiguous:
+			w += 1
+		}
+	}
+	return w
 }
