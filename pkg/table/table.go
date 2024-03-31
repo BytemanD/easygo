@@ -104,6 +104,9 @@ func (t ItemsTable) header() []string {
 	return header
 }
 func (t ItemsTable) Render() string {
+	if t.style == nil {
+		t.SetStyle(StyleDefault)
+	}
 	itemsValue := reflect.ValueOf(t.Items)
 	t.columnsWidth = make([]int, len(t.Headers))
 	rows := [][]string{t.header()}
