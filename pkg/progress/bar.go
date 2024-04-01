@@ -11,15 +11,26 @@ import (
 )
 
 type ProgressBar struct {
-	Total       int
-	completed   int
-	startTime   time.Time
-	EnableColor bool
-	channel     chan int
-	wg          *sync.WaitGroup
+	Total     int
+	completed int
+	startTime time.Time
+
+	colorFormatter *color.Color
+
+	channel chan int
+	wg      *sync.WaitGroup
 }
 
 // var cha chan struct{}
+func (bar *ProgressBar) SetColor(attributes ...color.Attribute) {
+	bar.colorFormatter = color.New(attributes...)
+}
+func (bar *ProgressBar) colorStr(f string, a ...interface{}) string {
+	if bar.colorFormatter == nil {
+		return fmt.Sprintf(f, a...)
+	}
+	return bar.colorFormatter.Sprintf(f, a...)
+}
 
 func (bar *ProgressBar) Increment(size int) {
 	bar.completed += size
@@ -31,11 +42,8 @@ func (bar *ProgressBar) formatSince() string {
 }
 func (bar *ProgressBar) printProgress() {
 	percent := float64(bar.completed) * 100 / float64(bar.Total)
-	progressStr := strings.Repeat("■", int(percent))
+	progressStr := bar.colorStr(strings.Repeat("■", int(percent)))
 
-	if bar.EnableColor {
-		progressStr = color.CyanString(progressStr)
-	}
 	if bar.completed < bar.Total {
 		fmt.Println("")
 	}

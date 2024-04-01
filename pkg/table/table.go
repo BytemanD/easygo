@@ -12,16 +12,33 @@ import (
 )
 
 type ItemsTable struct {
-	Headers      []H
-	Items        interface{}
-	columnsWidth []int
-	style        Style
-	InlineBorder bool
-	AutoIndex    bool
+	Headers        []H
+	Items          interface{}
+	columnsWidth   []int
+	InlineBorder   bool
+	AutoIndex      bool
+	style          Style
+	colorFormatter *color.Color
 }
 
-func (t *ItemsTable) SetStyle(style Style) {
+func (t *ItemsTable) SetStyle(style Style, colors ...color.Attribute) {
 	t.style = style
+	color.GreenString("text")
+	if len(colors) > 0 {
+		t.SetColor(colors...)
+	}
+}
+func (t *ItemsTable) SetColor(attributes ...color.Attribute) {
+	t.colorFormatter = color.New(attributes...)
+}
+func (t ItemsTable) borderStr(i int) string {
+	return t.colorStr(t.style[i])
+}
+func (t ItemsTable) colorStr(s string) string {
+	if t.colorFormatter == nil {
+		return s
+	}
+	return t.colorFormatter.Sprintf(s)
 }
 
 func (t ItemsTable) rowString(row []string, enableColor bool) string {
@@ -30,15 +47,18 @@ func (t ItemsTable) rowString(row []string, enableColor bool) string {
 		renderCol := fmt.Sprintf("%-*s",
 			t.columnsWidth[i]-stringutils.TextWidth(column)+utf8.RuneCountInString(column),
 			column)
-		if enableColor && t.Headers[i].Color {
-			renderCol = color.CyanString(renderCol)
+		if enableColor {
+			renderCol = t.colorStr(renderCol)
 		}
+		// if enableColor && t.Headers[i].Color {
+		// 	renderCol = color.CyanString(renderCol)
+		// }
 		columes = append(columes, renderCol)
 	}
 	return fmt.Sprintf("%s %s %s",
-		t.style[10],
-		strings.Join(columes, " "+t.style[10]+" "),
-		t.style[10],
+		t.borderStr(10),
+		strings.Join(columes, " "+t.borderStr(10)+" "),
+		t.borderStr(10),
 	)
 }
 func (t ItemsTable) headerRow(row []string) string {
@@ -50,28 +70,30 @@ func (t ItemsTable) bodyRow(row []string) string {
 func (t ItemsTable) topBorder() string {
 	columes := []string{}
 	for i := range t.Headers {
-		columes = append(columes, strings.Repeat(t.style[9], t.columnsWidth[i]+2))
+		columes = append(columes, strings.Repeat(t.borderStr(9), t.columnsWidth[i]+2))
 	}
 	return fmt.Sprintf("%s%s%s",
-		t.style[0], strings.Join(columes, t.style[1]), t.style[2],
+		t.borderStr(0), strings.Join(columes, t.borderStr(1)),
+		t.borderStr(2),
 	)
 }
 func (t ItemsTable) inlineBorder() string {
 	columes := []string{}
 	for i := range t.Headers {
-		columes = append(columes, strings.Repeat(t.style[9], t.columnsWidth[i]+2))
+		columes = append(columes, strings.Repeat(
+			t.borderStr(9), t.columnsWidth[i]+2))
 	}
 	return fmt.Sprintf("%s%s%s",
-		t.style[3], strings.Join(columes, t.style[4]), t.style[5],
+		t.borderStr(3), strings.Join(columes, t.borderStr(4)), t.borderStr(5),
 	)
 }
 func (t ItemsTable) bottomBorder() string {
 	columes := []string{}
 	for i := range t.Headers {
-		columes = append(columes, strings.Repeat(t.style[9], t.columnsWidth[i]+2))
+		columes = append(columes, strings.Repeat(t.borderStr(9), t.columnsWidth[i]+2))
 	}
 	return fmt.Sprintf("%s%s%s",
-		t.style[6], strings.Join(columes, t.style[7]), t.style[8],
+		t.borderStr(6), strings.Join(columes, t.borderStr(7)), t.borderStr(8),
 	)
 }
 func (t *ItemsTable) parseToRows(row []string) [][]string {

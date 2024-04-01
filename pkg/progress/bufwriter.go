@@ -3,6 +3,8 @@ package progress
 import (
 	"bufio"
 	"io"
+
+	"github.com/fatih/color"
 )
 
 type ProgressWriter struct {
@@ -22,6 +24,9 @@ func (pw ProgressWriter) Flush() {
 	pw.Writer.Flush()
 }
 
+func (pw ProgressWriter) SetProgressColor(attrs ...color.Attribute) {
+	pw.bar.SetColor(attrs...)
+}
 func NewProgressWriter(w io.Writer, total int) ProgressWriter {
 	return ProgressWriter{
 		Writer: bufio.NewWriter(w),

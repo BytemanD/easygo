@@ -19,6 +19,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/fatih/color"
 )
 
 func GetHtml(url string) goquery.Document {
@@ -79,6 +80,7 @@ func Download(url string, output string, showProgress bool) error {
 			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 			logging.Info("size: %s", stringutils.HumanBytes(size))
 			pw := progress.NewProgressWriter(outputFile, size)
+			pw.SetProgressColor(color.FgCyan)
 			defer pw.Flush()
 			defer pw.Wait()
 			writer = pw

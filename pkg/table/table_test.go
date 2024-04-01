@@ -3,6 +3,8 @@ package table
 import (
 	"strings"
 	"testing"
+
+	"github.com/fatih/color"
 )
 
 type Human struct {
@@ -152,10 +154,11 @@ func BenchmarkItemsTable(b *testing.B) {
 	itemsTable := ItemsTable{
 		Headers: []H{
 			{Field: "ID"},
-			{Title: "Name", Color: true, MaxWidth: 20},
+			{Title: "Name", MaxWidth: 20},
 			{Title: "age", Field: "Age"},
 		},
 		Items: items,
 	}
+	itemsTable.SetStyle(StyleLight, color.FgBlue, color.Bold)
 	itemsTable.Render()
 }

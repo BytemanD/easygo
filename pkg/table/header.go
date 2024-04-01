@@ -3,7 +3,6 @@ package table
 type H struct {
 	Title    string
 	Field    string
-	Color    bool
 	MaxWidth int
 	isIndex  bool
 }
