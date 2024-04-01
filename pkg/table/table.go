@@ -1,3 +1,15 @@
+// ItemsTable 用于展示 Array 和 Slice 类型数据
+//
+// 支持以下特性：
+//
+// 样式
+//  1. 设置边框格式
+//  1. 自定义颜色
+//  1. 开启/关闭表格内边框
+//
+// 列
+//  1. 开启/关闭自动编号
+//  1. 设置最大宽度
 package table
 
 import (
@@ -55,9 +67,6 @@ func (t ItemsTable) rowString(row []string, enableColor bool) string {
 		if enableColor {
 			renderCol = t.colorStr(renderCol)
 		}
-		// if enableColor && t.Headers[i].Color {
-		// 	renderCol = color.CyanString(renderCol)
-		// }
 		columes = append(columes, renderCol)
 	}
 	return fmt.Sprintf("%s %s %s",
