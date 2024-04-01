@@ -25,11 +25,11 @@ type ProgressBar struct {
 func (bar *ProgressBar) SetColor(attributes ...color.Attribute) {
 	bar.colorFormatter = color.New(attributes...)
 }
-func (bar *ProgressBar) colorStr(f string, a ...interface{}) string {
+func (bar *ProgressBar) colorStr(s string) string {
 	if bar.colorFormatter == nil {
-		return fmt.Sprintf(f, a...)
+		return s
 	}
-	return bar.colorFormatter.Sprintf(f, a...)
+	return bar.colorFormatter.Sprint(s)
 }
 
 func (bar *ProgressBar) Increment(size int) {
@@ -42,12 +42,13 @@ func (bar *ProgressBar) formatSince() string {
 }
 func (bar *ProgressBar) printProgress() {
 	percent := float64(bar.completed) * 100 / float64(bar.Total)
-	progressStr := bar.colorStr(strings.Repeat("■", int(percent)))
+	progressStr := strings.Repeat("■", int(percent))
 
 	if bar.completed < bar.Total {
 		fmt.Println("")
 	}
-	fmt.Printf("completed %*.2f%% [%-*s] %v", 6, percent, 100, progressStr, bar.formatSince())
+	fmt.Printf("completed %*.2f%% [%s] %v", 6, percent,
+		bar.colorStr(fmt.Sprintf("%-*s", 100, progressStr)), bar.formatSince())
 	if bar.completed >= bar.Total {
 		fmt.Println("")
 	} else {
@@ -73,11 +74,14 @@ func (bar *ProgressBar) Wait() {
 	bar.wg.Wait()
 }
 
-func NewProgressBar(total int) *ProgressBar {
+func NewProgressBar(total int, colors ...color.Attribute) *ProgressBar {
 	pb := ProgressBar{
 		Total: total, startTime: time.Now(),
 		channel: make(chan int),
 		wg:      &sync.WaitGroup{},
+	}
+	if len(colors) > 0 {
+		pb.SetColor(colors...)
 	}
 	pb.Start()
 	return &pb
