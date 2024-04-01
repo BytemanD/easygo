@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	httpLib "github.com/BytemanD/easygo/pkg/http"
@@ -14,6 +15,7 @@ import (
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/easygo/pkg/table"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -117,6 +119,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 		date, _ := cmd.Flags().GetString("date")
 		output, _ := cmd.Flags().GetString("output")
 		workers, _ := cmd.Flags().GetInt("workers")
+		limit, _ := cmd.Flags().GetInt("limit")
 
 		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, date)
 		logging.Info("解析页面 %s", reqUrl)
@@ -125,6 +128,9 @@ var BingImgWdbyteCmd = &cobra.Command{
 		doc.Find("a").Each(func(_ int, s *goquery.Selection) {
 			href := s.AttrOr("href", "")
 			if err := stringutils.MustMatch(href, `.*id=.+\.jpg`); err == nil {
+				if limit > 0 && len(files) >= limit {
+					return
+				}
 				urlParsed, _ := url.Parse(href)
 				fileName := urlParsed.Query().Get("id")
 				files = append(files, httpLib.HttpFile{Name: fileName, Url: href})
@@ -138,6 +144,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 			Name   string
 			Size   int
 			Result string
+			Spend  time.Duration
 		}
 		webFiles := []webFile{}
 		downloader := httpLib.HttpDownloader{Output: output}
@@ -147,26 +154,32 @@ var BingImgWdbyteCmd = &cobra.Command{
 			MaxWorker:    workers,
 			Func: func(item interface{}) error {
 				file := item.(httpLib.HttpFile)
-				if err := downloader.Download(&file); err != nil {
+				startTime := time.Now()
+				err := downloader.Download(&file)
+				var result string
+				if err != nil {
 					logging.Error("下载失败: %s", file.Url)
-					webFiles = append(webFiles, webFile{Name: file.Name, Size: file.GetSize(), Result: "😞"})
-					return err
+					result = "😞"
 				} else {
 					logging.Info("下载完成: %s, Size: %d", file.Name, file.GetSize())
-					webFiles = append(webFiles, webFile{Name: file.Name, Size: file.GetSize(), Result: "👌"})
-					return nil
+					result = "👌"
 				}
+				webFiles = append(webFiles, webFile{
+					Name: file.Name, Size: file.GetSize(),
+					Result: result,
+					Spend:  time.Since(startTime),
+				})
+				return err
 			},
 		}
 		logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
 		taskGroup.Start()
 
-		t := table.ItemsTable{
-			Headers:   []table.H{{Title: "Result"}, {Title: "Name"}, {Title: "Size"}},
-			Items:     webFiles,
-			AutoIndex: true,
-		}
-		result, _ := t.Render()
+		result, _ := table.NewItemsTable(
+			[]string{"Result", "Name", "Size", "Spend"}, webFiles,
+		).SetStyle(
+			table.StyleLight, color.FgCyan,
+		).EnableAutoIndex().Render()
 		fmt.Println(result)
 	},
 }
@@ -178,6 +191,7 @@ func init() {
 
 	BingImgWdbyteCmd.Flags().StringP("output", "o", "./", "保存路径")
 	BingImgWdbyteCmd.Flags().Int("workers", 0, "并发数")
+	BingImgWdbyteCmd.Flags().Int("limit", 0, "下载条数")
 	BingImgWdbyteCmd.Flags().String("date", "", "日期, 例如: 2023-09")
 
 	FetchWallpaperCmd.AddCommand(BingImgCmd, BingImgWdbyteCmd)

@@ -81,8 +81,8 @@ func Download(url string, output string, showProgress bool) error {
 			logging.Info("size: %s", stringutils.HumanBytes(size))
 			pw := progress.NewProgressWriter(outputFile, size)
 			pw.SetProgressColor(color.FgCyan)
-			defer pw.Flush()
 			defer pw.Wait()
+			defer pw.Flush()
 			writer = pw
 		} else {
 			logging.Warning("content-length is none for url: %s", url)

@@ -21,15 +21,20 @@ type ItemsTable struct {
 	colorFormatter *color.Color
 }
 
-func (t *ItemsTable) SetStyle(style Style, colors ...color.Attribute) {
+func (t *ItemsTable) SetStyle(style Style, colors ...color.Attribute) *ItemsTable {
 	t.style = style
-	color.GreenString("text")
 	if len(colors) > 0 {
 		t.SetColor(colors...)
 	}
+	return t
 }
-func (t *ItemsTable) SetColor(attributes ...color.Attribute) {
+func (t *ItemsTable) SetColor(attributes ...color.Attribute) *ItemsTable {
 	t.colorFormatter = color.New(attributes...)
+	return t
+}
+func (t *ItemsTable) EnableAutoIndex() *ItemsTable {
+	t.AutoIndex = true
+	return t
 }
 func (t ItemsTable) borderStr(i int) string {
 	return t.colorStr(t.style[i])
@@ -127,7 +132,7 @@ func (t ItemsTable) header() []string {
 	}
 	return header
 }
-func (t ItemsTable) Render() (string, error) {
+func (t *ItemsTable) Render() (string, error) {
 	itemsValue := reflect.ValueOf(t.Items)
 	if itemsValue.Kind() != reflect.Slice && itemsValue.Kind() != reflect.Array {
 		return "", fmt.Errorf("items must be Slice or Array type")
@@ -186,4 +191,16 @@ func (t ItemsTable) Render() (string, error) {
 
 	lines = append(lines, t.bottomBorder())
 	return strings.Join(lines, "\n"), nil
+}
+
+func NewItemsTable(titles []string, items interface{}) *ItemsTable {
+	header := make([]H, len(titles))
+	for i, title := range titles {
+		header[i] = H{Title: title}
+	}
+	table := ItemsTable{
+		Headers: header,
+		Items:   items,
+	}
+	return &table
 }
