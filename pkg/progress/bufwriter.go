@@ -19,8 +19,6 @@ func (pw ProgressWriter) Write(p []byte) (n int, err error) {
 }
 func (pw ProgressWriter) Wait() {
 	pw.bar.Wait()
-}
-func (pw ProgressWriter) Flush() {
 	pw.Writer.Flush()
 }
 

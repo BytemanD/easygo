@@ -74,27 +74,23 @@ func Download(url string, output string, showProgress bool) error {
 	outputFile, _ := os.Create(outputPath)
 	defer outputFile.Close()
 
-	var writer io.Writer
 	if showProgress {
 		if resp.Header.Get("Content-Length") != "" {
 			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 			logging.Info("size: %s", stringutils.HumanBytes(size))
 			pw := progress.NewProgressWriter(outputFile, size)
 			pw.SetProgressColor(color.FgCyan)
-			defer pw.Wait()
-			defer pw.Flush()
-			writer = pw
+			io.Copy(pw, resp.Body)
+			pw.Wait()
+			return nil
 		} else {
 			logging.Warning("content-length is none for url: %s", url)
 		}
 	}
-	if writer == nil {
-		wt := bufio.NewWriter(outputFile)
-		defer wt.Flush()
-		writer = wt
-	}
 
-	io.Copy(writer, resp.Body)
+	wt := bufio.NewWriter(outputFile)
+	wt.Flush()
+	io.Copy(wt, resp.Body)
 	return nil
 }
 

@@ -10,15 +10,16 @@ import (
 	"github.com/fatih/color"
 )
 
+const DEFAULT_WIDTH = 100
+
 type ProgressBar struct {
-	Total     int
-	completed int
-	startTime time.Time
-
+	Total          int
+	completed      int
+	startTime      time.Time
+	Width          int
 	colorFormatter *color.Color
-
-	channel chan int
-	wg      *sync.WaitGroup
+	channel        chan int
+	wg             *sync.WaitGroup
 }
 
 // var cha chan struct{}
@@ -33,7 +34,6 @@ func (bar *ProgressBar) colorStr(s string) string {
 }
 
 func (bar *ProgressBar) Increment(size int) {
-	bar.completed += size
 	bar.channel <- size
 }
 func (bar *ProgressBar) formatSince() string {
@@ -42,13 +42,17 @@ func (bar *ProgressBar) formatSince() string {
 }
 func (bar *ProgressBar) printProgress() {
 	percent := float64(bar.completed) * 100 / float64(bar.Total)
-	progressStr := strings.Repeat("■", int(percent))
+	progressStr := strings.Repeat("■", int(float64(bar.Width)*(percent/100)))
 
 	if bar.completed < bar.Total {
 		fmt.Println("")
 	}
-	fmt.Printf("completed %*.2f%% [%s] %v", 6, percent,
-		bar.colorStr(fmt.Sprintf("%-*s", 100, progressStr)), bar.formatSince())
+	fmt.Printf("completed %*.2f%% [%s] %v %d|%d",
+		6, percent,
+		bar.colorStr(fmt.Sprintf("%-*s", bar.Width, progressStr)),
+		bar.formatSince(),
+		bar.completed, bar.Total,
+	)
 	if bar.completed >= bar.Total {
 		fmt.Println("")
 	} else {
@@ -57,11 +61,15 @@ func (bar *ProgressBar) printProgress() {
 	fmt.Print("\033[2K\r")
 }
 func (bar *ProgressBar) Start() {
+	if bar.Width <= 0 {
+		bar.Width = DEFAULT_WIDTH
+	}
 	bar.wg.Add(1)
 	go func(pb *ProgressBar) {
 		defer pb.wg.Done()
 		for {
-			<-bar.channel
+			size := <-bar.channel
+			bar.completed += size
 			logging.Debug("tolal: %d, comleted: %d", bar.Total, bar.completed)
 			bar.printProgress()
 			if bar.completed >= bar.Total {
@@ -84,5 +92,6 @@ func NewProgressBar(total int, colors ...color.Attribute) *ProgressBar {
 		pb.SetColor(colors...)
 	}
 	pb.Start()
+	pb.Increment(0)
 	return &pb
 }

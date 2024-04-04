@@ -41,7 +41,6 @@ var Wget = &cobra.Command{
 			logging.Error("download %s failed: %s", url, err)
 			return
 		}
-		logging.Info("saved to %s", output)
 	},
 }
 var WgetLinks = &cobra.Command{
