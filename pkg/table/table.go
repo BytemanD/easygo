@@ -24,6 +24,7 @@ import (
 )
 
 type ItemsTable struct {
+	Name           string
 	Headers        []H
 	Items          interface{}
 	columnsWidth   []int
@@ -75,11 +76,32 @@ func (t ItemsTable) rowString(row []string, enableColor bool) string {
 		t.borderStr(10),
 	)
 }
+func (t ItemsTable) titleRow() string {
+	titleWidth := 0
+	for _, w := range t.columnsWidth {
+		titleWidth += w + 2
+	}
+	return fmt.Sprintf("%s %-*s %s",
+		t.borderStr(10),
+		titleWidth-1, t.Name,
+		t.borderStr(10),
+	)
+}
 func (t ItemsTable) headerRow(row []string) string {
 	return t.rowString(row, true)
 }
 func (t ItemsTable) bodyRow(row []string) string {
 	return t.rowString(row, false)
+}
+func (t ItemsTable) titleTopBorder() string {
+	columes := []string{}
+	for i := range t.Headers {
+		columes = append(columes, strings.Repeat(t.borderStr(9), t.columnsWidth[i]+2))
+	}
+	return fmt.Sprintf("%s%s%s",
+		t.borderStr(0), strings.Join(columes, t.borderStr(9)),
+		t.borderStr(2),
+	)
 }
 func (t ItemsTable) topBorder() string {
 	columes := []string{}
@@ -189,7 +211,13 @@ func (t *ItemsTable) Render() (string, error) {
 	}
 	// t.fixMaxWidth()
 	// 渲染
-	lines := []string{t.topBorder(), t.headerRow(rows[0]), t.inlineBorder()}
+	lines := []string{}
+	if t.Name != "" {
+		lines = append(lines, t.titleTopBorder(), t.titleRow(), t.inlineBorder())
+	} else {
+		lines = append(lines, t.topBorder())
+	}
+	lines = append(lines, t.headerRow(rows[0]), t.inlineBorder())
 	for i := 1; i < len(rows); i++ {
 		row := rows[i]
 		lines = append(lines, t.bodyRow(row))
