@@ -47,6 +47,7 @@ func main() {
 		commands.ContainerImageSync,
 		commands.MDRender,
 		commands.Wget,
+		commands.CSVRender,
 	)
 
 	rootCmd.Execute()
