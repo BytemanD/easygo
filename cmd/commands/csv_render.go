@@ -9,10 +9,25 @@ import (
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/v6/text"
 
 	// "github.com/BytemanD/easygo/pkg/table"
 	"github.com/spf13/cobra"
 )
+
+var TABLE_STYLES = map[string]table.Style{
+	"default": table.StyleDefault,
+	"light":   table.StyleLight,
+	"rounded": table.StyleRounded,
+	"bold":    table.StyleBold,
+}
+var TABLE_COLORS = map[string]text.Color{
+	"cyan":   text.FgCyan,
+	"blue":   text.FgBlue,
+	"yellow": text.FgYellow,
+	"red":    text.FgRed,
+	"green":  text.FgGreen,
+}
 
 func getRow(columns []string) table.Row {
 	tableRow := table.Row{}
@@ -29,21 +44,26 @@ var CSVRender = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		hasHeader, _ := cmd.Flags().GetBool("header")
 		style, _ := cmd.Flags().GetString("style")
+		color, _ := cmd.Flags().GetString("color")
 
 		tableWriter := table.NewWriter()
-		switch style {
-		case "rounded":
-			tableWriter.SetStyle(table.StyleRounded)
-		case "light":
-			tableWriter.SetStyle(table.StyleLight)
-		case "bold":
-			tableWriter.SetStyle(table.StyleBold)
-		case "default":
-			tableWriter.SetStyle(table.StyleDefault)
-		default:
+
+		if _, ok := TABLE_STYLES[style]; ok {
+			tableWriter.SetStyle(TABLE_STYLES[style])
+		} else {
 			fmt.Println("invalid style:", style)
 			os.Exit(1)
 		}
+		if color != "" {
+			if _, ok := TABLE_COLORS[color]; ok {
+				tableWriter.Style().Color.Border = text.Colors{TABLE_COLORS[color]}
+				tableWriter.Style().Color.Separator = text.Colors{TABLE_COLORS[color]}
+			} else {
+				fmt.Println("invalid color:", color)
+				os.Exit(1)
+			}
+		}
+
 		var (
 			content string
 			err     error
@@ -94,5 +114,6 @@ var CSVRender = &cobra.Command{
 func init() {
 	CSVRender.Flags().Bool("header", false, "Has table header")
 	CSVRender.Flags().String("style", "default", "Table style. default, light, rounded, bold")
+	CSVRender.Flags().String("color", "", "Table color")
 
 }
