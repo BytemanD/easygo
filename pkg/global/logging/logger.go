@@ -26,11 +26,6 @@ type Logger struct {
 	enableFileLine bool
 }
 
-func init() {
-	std.SetLevel(ERROR)
-	std.SetMaxErrorStacks(20)
-}
-
 func (logger *Logger) isLevelEnable(logLevel LogLevel) bool {
 	return logger.Level >= logLevel
 }
@@ -107,7 +102,13 @@ func (logger *Logger) Exception(err error) {
 		}
 	}
 }
-
+func SetOutput(file string) {
+	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logFile)
+}
 func NewLogger() *Logger {
 	logger := &Logger{
 		Level:          ERROR,

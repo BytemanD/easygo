@@ -11,9 +11,6 @@ import (
 )
 
 var Version string
-var (
-	debug bool
-)
 
 func getVersion() string {
 	if Version == "" {
@@ -30,14 +27,17 @@ func main() {
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			level := logging.INFO
+			debug, _ := cmd.Flags().GetBool("debug")
 			if debug {
 				level = logging.DEBUG
 			}
-			logging.BasicConfig(logging.LogConfig{Level: level, EnableFileLine: true})
+			logFile, _ := cmd.Flags().GetString("log-file")
+			logging.BasicConfig(logging.LogConfig{Level: level, EnableFileLine: true, Output: logFile})
 		},
 	}
 
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "显示Debug信息")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
+	rootCmd.PersistentFlags().String("log-file", "", "日志文件")
 
 	rootCmd.AddCommand(
 		commands.FetchWallpaperCmd,
