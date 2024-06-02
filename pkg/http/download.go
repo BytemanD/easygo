@@ -22,14 +22,14 @@ import (
 	"github.com/fatih/color"
 )
 
-func GetHtml(url string) goquery.Document {
+func GetHtml(url string) *goquery.Document {
 	resp, err := http.Get(url)
 	if err != nil {
 		logging.Warning("get url failed: %s", err)
-		return goquery.Document{}
+		return nil
 	}
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
-	return *doc
+	return doc
 }
 
 func UrlJoin(url1 string, url2 string) string {
@@ -44,9 +44,15 @@ func UrlJoin(url1 string, url2 string) string {
 func GetLinks(url string, regex string) list.List {
 	doc := GetHtml(url)
 	links := list.New()
-
+	if doc == nil {
+		return *links
+	}
 	reg := regexp.MustCompile(regex)
-	doc.Find("a").Each(func(_ int, s *goquery.Selection) {
+	selection := doc.Find("a")
+	if selection == nil {
+		return *links
+	}
+	selection.Each(func(_ int, s *goquery.Selection) {
 		href := s.AttrOr("href", "")
 		if regex == "" || reg.FindString(href) != "" {
 			links.PushBack(UrlJoin(url, href))
@@ -117,7 +123,7 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 				logging.Error("下载失败: %s", url)
 				return err
 			} else {
-				logging.Info("下载完成: %s", url)
+				logging.Success("下载完成: %s", url)
 				return nil
 			}
 		},

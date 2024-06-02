@@ -18,6 +18,7 @@ type LogConfig struct {
 	MaxErrorStacks int
 	EnableFileLine bool
 	Output         string
+	EnableColor    bool
 }
 
 func BasicConfig(config LogConfig) {
@@ -32,6 +33,9 @@ func BasicConfig(config LogConfig) {
 	}
 	if config.Output != "" {
 		SetOutput(config.Output)
+	}
+	if config.EnableColor {
+		LOGGER.EnableColor()
 	}
 }
 
@@ -53,6 +57,10 @@ func Fatal(format string, args ...interface{}) {
 	LOGGER.Error(format, args...)
 	os.Exit(1)
 }
+func Success(format string, args ...interface{}) {
+	LOGGER.Success(format, args...)
+}
+
 func Exception(err error) {
 	LOGGER.Exception(err)
 }

@@ -32,12 +32,17 @@ func main() {
 				level = logging.DEBUG
 			}
 			logFile, _ := cmd.Flags().GetString("log-file")
-			logging.BasicConfig(logging.LogConfig{Level: level, EnableFileLine: true, Output: logFile})
+			enableLogColor, _ := cmd.Flags().GetBool("enable-log-color")
+			logging.BasicConfig(logging.LogConfig{
+				Level: level, EnableFileLine: true, Output: logFile,
+				EnableColor: enableLogColor,
+			})
 		},
 	}
 
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "显示Debug信息")
 	rootCmd.PersistentFlags().String("log-file", "", "日志文件")
+	rootCmd.PersistentFlags().Bool("enable-log-color", false, "启用日志颜色")
 
 	rootCmd.AddCommand(
 		commands.FetchWallpaperCmd,

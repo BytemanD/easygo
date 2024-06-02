@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"github.com/fatih/color"
 )
 
 type LogLevel uint32
@@ -24,6 +26,7 @@ type Logger struct {
 	Out            io.Writer
 	callerSkip     int
 	enableFileLine bool
+	enableColor    bool
 }
 
 func (logger *Logger) isLevelEnable(logLevel LogLevel) bool {
@@ -32,6 +35,12 @@ func (logger *Logger) isLevelEnable(logLevel LogLevel) bool {
 
 func (logger *Logger) SetLevel(logLevel LogLevel) {
 	logger.Level = logLevel
+}
+func (logger *Logger) EnableColor() {
+	logger.enableColor = true
+}
+func (logger *Logger) DisableColor() {
+	logger.enableColor = false
 }
 func (logger *Logger) EnableFileLine() {
 	logger.enableFileLine = true
@@ -68,22 +77,42 @@ func (logger *Logger) Info(format string, args ...interface{}) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%s INFO %s", logger.prefix(), fmt.Sprintf(format, args...))
+	log.Printf("%s INFO  %s", logger.prefix(), fmt.Sprintf(format, args...))
+}
+func (logger *Logger) Success(format string, args ...interface{}) {
+	if !logger.isLevelEnable(INFO) {
+		return
+	}
+	msg := fmt.Sprintf(format, args...)
+	if logger.enableColor {
+		msg = color.New(color.FgGreen).Sprint(msg)
+	}
+	fmt.Print("\033[2K\r")
+	log.Printf("%s INFO  %s", logger.prefix(), msg)
 }
 func (logger *Logger) Warning(format string, args ...interface{}) {
 	if !logger.isLevelEnable(WARNING) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%s WARNING %s", logger.prefix(), fmt.Sprintf(format, args...))
+	msg := fmt.Sprintf(format, args...)
+	if logger.enableColor {
+		msg = color.New(color.FgYellow).Sprint(msg)
+	}
+	log.Printf("%s WARN  %s", logger.prefix(), msg)
 }
 func (logger *Logger) Error(format string, args ...interface{}) {
 	if !logger.isLevelEnable(ERROR) {
 		return
 	}
 	fmt.Print("\033[2K\r")
-	log.Printf("%s ERROR %s", logger.prefix(), fmt.Sprintf(format, args...))
+	msg := fmt.Sprintf(format, args...)
+	if logger.enableColor {
+		msg = color.New(color.FgRed).Sprint(msg)
+	}
+	log.Printf("%s ERROR %s", logger.prefix(), msg)
 }
+
 func (logger *Logger) Panic(err error) {
 	log.Panic(err)
 }
