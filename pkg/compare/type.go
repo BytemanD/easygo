@@ -22,6 +22,17 @@ func IsStructOf(structName string, v1 interface{}) bool {
 	}
 	return IsPtrOf(structName, v1)
 }
+func IsStructIn(v1 interface{}, structNames ...string) bool {
+	if v1 == nil {
+		return false
+	}
+	for _, name := range structNames {
+		if IsStructOf(name, v1) {
+			return true
+		}
+	}
+	return false
+}
 
 func IsPtrOf(structName string, v1 interface{}) bool {
 	if v1 == nil {
