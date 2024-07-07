@@ -47,7 +47,7 @@ func main() {
 	rootCmd.AddCommand(
 		commands.FetchWallpaperCmd,
 		commands.WgetLinks,
-		commands.SimpleHttpFS,
+		commands.HttpFS,
 		commands.IniCrud,
 		commands.ContainerImageSync,
 		commands.MDRender,

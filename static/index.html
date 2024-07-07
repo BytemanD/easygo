@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdmirror.com/npm/@mdi/font@latest/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="https://cdn.staticfile.net/vuetify/3.4.11/vuetify.css" rel="stylesheet">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui"> -->
+
+    <script src="https://cdn.staticfile.org/axios/0.18.0/axios.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@3.x/dist/vue.js"></script> -->
+    <script src="https://cdn.staticfile.net/vue/3.2.36/vue.global.min.js"></script>
+    <script src="https://cdn.staticfile.net/vuetify/3.4.11/vuetify.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vuetify@3.6.10/dist/vuetify.min.js"></script> -->
+    <title>index</title>
+</head>
+
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-row>
+                    <v-col cols="3">
+                        <v-toolbar density="compact">
+                            <v-btn color="info" icon="mdi-arrow-left" @click="popPath"></v-btn>
+                            <!-- <v-btn density="compact" color="info" icon="mdi-arrow-right" @click="popPath"></v-btn> -->
+                            <v-btn color="info" icon="mdi-home" @click="home"></v-btn>
+                            <v-spacer></v-spacer>
+                            <v-btn color="info" icon="mdi-refresh" @click="refreshItems"></v-btn>
+                            <v-btn color="info" icon="mdi-upload" @click="selectFile">
+                            </v-btn>
+                        </v-toolbar>
+                        <input type="file" id="fileInput" style='display: none;'>
+                    </v-col>
+                    <v-col class="my-auto my-0 py-0">
+                        <v-breadcrumbs density="compact" class="pl-0" :items="paths" color="info"
+                            density="compact"></v-breadcrumbs>
+                    </v-col>
+                </v-row>
+                <v-card class="text-info">
+                    <v-data-table density="compact" :headers="headers" :items="entries" items-per-page="100">
+                        <template v-slot:[`item.size`]="{ item }">{{ humanSize(item.size) }}</template>
+                        <template v-slot:[`item.name`]="{ item }">
+                            <template v-if="item.isDir">
+                                <v-icon color="warning">mdi-folder</v-icon>
+                                <v-chip density="compact" @click="this.pushPath(item.name)" variant="text">
+                                    {{ item.name}}</v-chip>
+                            </template>
+                            <template v-else>
+                                <v-icon>mdi-file</v-icon>
+                                <span class="ml-2">{{ item.name }}</span>
+                            </template>
+                        </template>
+                        <template v-slot:[`item.actions`]="{ item }">
+                            <v-btn v-if="!item.isDir" icon="mdi-delete" variant="text" density="compact" color="error"
+                                @click="deleteFile(item.name)"></v-btn>
+                        </template>
+                        </template>
+                    </v-data-table>
+                </v-card>
+            </v-container>
+        </v-app>
+    </div>
+</body>
+<script>
+    const KB = 1024
+    const MB = KB * 1024
+    const GB = MB * 1024
+    const TB = GB * 1024
+
+    const HelloVueApp = {
+        data() {
+            return {
+                headers: [
+                    { title: "名称", key: "name" },
+                    { title: "大小", key: "size" },
+                    { title: "操作", key: "actions" },
+                ],
+                paths: [],
+                entries: [],
+                file: null,
+            }
+        },
+        methods: {
+            pathString() {
+                return this.paths.join('/')
+            },
+            humanSize(size) {
+                if (size >= TB) {
+                    return `${(size / TB).toFixed(2)} TB`
+                } else if (size >= GB) {
+                    return `${(size / GB).toFixed(2)} GB`
+                }
+                else if (size >= MB) {
+                    return `${(size / MB).toFixed(2)} MB`
+                }
+                else if (size >= KB) {
+                    return `${(size / KB).toFixed(2)} KB`
+                }
+                return `${size} B`
+            },
+            async refreshItems() {
+                let self = this;
+                console.debug("refresh items")
+                let resp = await axios.get(`/fs/entries?path=${this.pathString()}`)
+                this.entries = resp.data.entries
+            },
+            pushPath(name) {
+                this.paths.push(name)
+                this.refreshItems()
+            },
+            popPath(name) {
+                this.paths.pop(name)
+                this.refreshItems()
+            },
+            home(name) {
+                this.paths = []
+                this.refreshItems()
+            },
+            selectFile() {
+                document.getElementById('fileInput').click();
+            },
+            async uploadFile(file) {
+                console.log('上传文件', file.name)
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    resp = await axios.post(
+                        `/fs/entries?path=${this.pathString()}`,
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data'
+                            }
+                        }
+                    )
+                    console.log("上传成功")
+                    this.refreshItems()
+                } catch (e) {
+                    console.error("上传失败", e)
+                } finally {
+                    let fileInput = document.getElementById('fileInput')
+                    fileInput.value = '';
+                    fileInput.onchange = null;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            },
+            async deleteFile(name) {
+                try {
+                    deletFile = this.pathString() + "/" + name
+                    resp = await axios.delete(`/fs/entries?path=${deletFile}`)
+                    console.log(`${deletFile} 删除成功`)
+                    this.refreshItems()
+                } catch (e) {
+                    console.log(`${deletFile} 删除失败`)
+                }
+            }
+        },
+        mounted() {
+            this.refreshItems()
+            let self = this;
+            document.getElementById('fileInput').addEventListener('change', function (e) {
+                let file = e.target.files[0]
+                if (file) {
+                    console.log('文件已选中:', file.name);
+                    self.uploadFile(file)
+                }
+            });
+        }
+    }
+    const { createApp } = Vue
+    const { createVuetify } = Vuetify
+    const vuetify = createVuetify()
+    const app = createApp(HelloVueApp)
+    app.use(vuetify).mount('#app')
+</script>
+
+</html>

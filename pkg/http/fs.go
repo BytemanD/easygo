@@ -2,14 +2,15 @@ package http
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/easygo/pkg/sysutils"
+	"github.com/gin-gonic/gin"
 )
 
 var HTML = `
@@ -86,19 +87,6 @@ func (webFile *WebFile) HumanSize() string {
 	}
 }
 
-func handleError(err error, respWriter http.ResponseWriter, request *http.Request) {
-	logging.Error("目录处理异常, %s", err)
-	switch {
-	case os.IsNotExist(err):
-		fmt.Fprintf(respWriter, "路径不存在")
-	case os.IsPermission(err):
-		respWriter.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(respWriter, "目录无访问权限")
-	default:
-		respWriter.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(respWriter, "访问目录失败 %s", request.URL.Path)
-	}
-}
 func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
 	filePath := filepath.Join(FSConfig.Root, request.URL.Path)
 	filePath = strings.ReplaceAll(filePath, "\\", "/")
@@ -110,50 +98,126 @@ func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
 		filepath.Base(file.Name()))
 	http.ServeFile(respWriter, request, filePath)
 }
-func FilePathHandler(respWriter http.ResponseWriter, request *http.Request) {
-	logging.Info("请求地址 %s", request.URL.Path)
-	dirPath := filepath.Join(FSConfig.Root, request.URL.Path)
-	dir, err := os.Stat(dirPath)
-	if err != nil {
-		handleError(err, respWriter, request)
-		return
-	}
-	webFiles := []WebFile{}
-	if dir.IsDir() {
-		rd, err := os.ReadDir(dirPath)
-		if err != nil {
-			handleError(err, respWriter, request)
-			return
-		}
-		for _, fi := range rd {
-			webFile := WebFile{Dir: filepath.Join(request.URL.Path), Name: fi.Name()}
-			fiInfo, err := fi.Info()
-			if err == nil {
-				webFile.Size = fiInfo.Size()
-			} else {
-				logging.Warning("get dir info failed, %v", err)
-				webFile.Size = 0
-			}
-			webFiles = append(webFiles, webFile)
-		}
-		tmpl, _ := template.New("dirPage").Parse(HTML)
-		sort.Slice(webFiles, func(i, j int) bool {
-			return webFiles[i].IsDir()
-		})
-		tmpl.Execute(respWriter, webFiles)
-	} else {
-		handleFileDownload(respWriter, request)
-	}
+
+type VuetifyHttpFS struct {
+	Port          int16
+	Root          string
+	StaticPath    string
+	staticFileMap string
 }
 
-func SimpleHttpFS() error {
-	http.HandleFunc("/", FilePathHandler) //设置访问的路由
-	logging.Info("启动文件服务器 端口:%d, 目录: %s",
-		FSConfig.Port, FSConfig.Root)
-	if _, err := os.Stat(FSConfig.Root); err != nil {
+type DirEntry struct {
+	Name  string `json:"name"`
+	IsDir bool   `json:"isDir"`
+	Size  int64  `json:"size"`
+}
+
+func getDirEntries(dirPath string) ([]DirEntry, error) {
+	entries := []DirEntry{}
+	dirEnties, err := os.ReadDir(dirPath)
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range dirEnties {
+		var size int64
+		if !entry.IsDir() {
+			if stat, err := os.Stat(path.Join(dirPath, entry.Name())); err == nil {
+				size = stat.Size()
+			}
+		}
+		entries = append(entries, DirEntry{
+			Name:  entry.Name(),
+			IsDir: entry.IsDir(),
+			Size:  size,
+		})
+	}
+	return entries, nil
+}
+func (s VuetifyHttpFS) root(c *gin.Context) {
+	c.Redirect(http.StatusMovedPermanently, "index.html")
+}
+func (s VuetifyHttpFS) index(c *gin.Context) {
+	c.HTML(http.StatusOK, "index.html", gin.H{
+		"title": "VuetifyHttpFS",
+	})
+}
+
+func (s VuetifyHttpFS) getQueryPath(c *gin.Context) string {
+	dirPath := c.Query("path")
+	if strings.HasPrefix(dirPath, "/") {
+		dirPath = dirPath[1:]
+	}
+	return dirPath
+}
+func (s VuetifyHttpFS) getEntries(c *gin.Context) {
+	dirPath := s.getQueryPath(c)
+	entries, err := getDirEntries(path.Join(s.Root, dirPath))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"entries": entries})
+}
+
+func (s VuetifyHttpFS) uploadFile(c *gin.Context) {
+	dirPath := s.getQueryPath(c)
+	saveDir := path.Join(s.Root, dirPath)
+	form, _ := c.MultipartForm()
+	files := form.File["file"]
+	var err error
+	for _, file := range files {
+		saveFile := path.Join(saveDir, file.Filename)
+		logging.Info("saving file to %s", saveFile)
+		if err := c.SaveUploadedFile(file, saveFile); err != nil {
+			break
+		}
+		logging.Info("saved file %s", saveFile)
+	}
+	if err != nil {
+		c.JSON(200, gin.H{
+			"result": "上传失败",
+			"error":  err.Error(),
+		})
+	}
+}
+func (s VuetifyHttpFS) deleteFile(c *gin.Context) {
+	dirPath := s.getQueryPath(c)
+	filePath := path.Join(s.Root, dirPath)
+	if stat, err := os.Stat(filePath); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	} else {
+		if stat.IsDir() {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("%s is dir", dirPath)})
+		} else {
+			os.Remove(filePath)
+			c.JSON(http.StatusNoContent, gin.H{})
+		}
+	}
+}
+func (s VuetifyHttpFS) getServerAddr() string {
+	return fmt.Sprintf(":%d", s.Port)
+}
+func (s VuetifyHttpFS) Run() error {
+	r := gin.Default()
+	r.Delims("[[", "]]")
+	r.LoadHTMLGlob(s.StaticPath + "/*")
+
+	r.GET("/", s.root)
+	r.GET("/index.html", s.index)
+
+	r.GET("/fs/entries", s.getEntries)
+	r.POST("/fs/entries", s.uploadFile)
+	r.DELETE("/fs/entries", s.deleteFile)
+
+	ipaddrs, err := sysutils.GetAllIpaddress()
+	if err != nil {
 		return err
 	}
-	return http.ListenAndServe(
-		fmt.Sprintf(":%d", FSConfig.Port),
-		nil)
+	webAddr := []string{}
+	for _, ipaddr := range ipaddrs {
+		webAddr = append(webAddr, fmt.Sprintf("http://%s:%d", ipaddr, s.Port))
+	}
+	logging.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
+
+	return r.Run(fmt.Sprintf(s.getServerAddr()))
 }
