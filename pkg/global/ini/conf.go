@@ -1,7 +1,7 @@
 package ini
 
 import (
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/go-ini/ini"
 )
 
@@ -40,9 +40,9 @@ func (conf *Conf) Delete(section string, key string) {
 }
 
 func (conf *Conf) Log(info bool) {
-	logFunc := logging.Debug
+	logFunc := console.Debug
 	if info {
-		logFunc = logging.Info
+		logFunc = console.Info
 	}
 	for _, section := range conf.iniFile.Sections() {
 		for _, key := range section.Keys() {

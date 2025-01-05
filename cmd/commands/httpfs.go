@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	myHttp "github.com/BytemanD/easygo/pkg/http"
+	"github.com/BytemanD/go-console/console"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ var HttpFS = &cobra.Command{
 			StaticPath: "./static",
 		}
 		if err := server.Run(); err != nil {
-			logging.Fatal("启动HTTP服务失败: %s", err)
+			console.Fatal("启动HTTP服务失败: %s", err)
 		}
 	},
 }

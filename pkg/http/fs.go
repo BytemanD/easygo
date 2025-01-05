@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/sysutils"
+	"github.com/BytemanD/go-console/console"
 	"github.com/gin-gonic/gin"
 )
 
@@ -93,7 +93,7 @@ func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
 	file, _ := os.Open(filePath)
 	defer file.Close()
 
-	logging.Info("下载文件: %s", file.Name())
+	console.Info("下载文件: %s", file.Name())
 	respWriter.Header().Set("Content-Disposition", "attachment; filename="+
 		filepath.Base(file.Name()))
 	http.ServeFile(respWriter, request, filePath)
@@ -167,11 +167,11 @@ func (s VuetifyHttpFS) uploadFile(c *gin.Context) {
 	var err error
 	for _, file := range files {
 		saveFile := path.Join(saveDir, file.Filename)
-		logging.Info("saving file to %s", saveFile)
+		console.Info("saving file to %s", saveFile)
 		if err := c.SaveUploadedFile(file, saveFile); err != nil {
 			break
 		}
-		logging.Info("saved file %s", saveFile)
+		console.Info("saved file %s", saveFile)
 	}
 	if err != nil {
 		c.JSON(200, gin.H{
@@ -217,7 +217,7 @@ func (s VuetifyHttpFS) Run() error {
 	for _, ipaddr := range ipaddrs {
 		webAddr = append(webAddr, fmt.Sprintf("http://%s:%d", ipaddr, s.Port))
 	}
-	logging.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
+	console.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
 
 	return r.Run(fmt.Sprintf(s.getServerAddr()))
 }

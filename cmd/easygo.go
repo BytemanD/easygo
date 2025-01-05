@@ -7,7 +7,7 @@ import (
 
 	"github.com/BytemanD/easygo/cmd/commands"
 	"github.com/BytemanD/easygo/pkg/global/gitutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 var Version string
@@ -26,17 +26,14 @@ func main() {
 		Long:    "Golang 实现的工具合集",
 		Version: getVersion(),
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			level := logging.INFO
 			debug, _ := cmd.Flags().GetBool("debug")
 			if debug {
-				level = logging.DEBUG
+				console.EnableLogDebug()
 			}
 			logFile, _ := cmd.Flags().GetString("log-file")
-			enableLogColor, _ := cmd.Flags().GetBool("enable-log-color")
-			logging.BasicConfig(logging.LogConfig{
-				Level: level, EnableFileLine: true, Output: logFile,
-				EnableColor: enableLogColor,
-			})
+			if logFile != "" {
+				console.SetLogFile(logFile)
+			}
 		},
 	}
 

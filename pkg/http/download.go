@@ -13,8 +13,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/BytemanD/go-console/console"
+
 	"github.com/BytemanD/easygo/pkg/fileutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/progress"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -25,7 +26,7 @@ import (
 func GetHtml(url string) *goquery.Document {
 	resp, err := http.Get(url)
 	if err != nil {
-		logging.Warning("get url failed: %s", err)
+		console.Warn("get url failed: %s", err)
 		return nil
 	}
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
@@ -65,7 +66,7 @@ func Download(url string, output string, showProgress bool) error {
 	_, fileName := filepath.Split(url)
 	resp, err := http.Get(url)
 	if err != nil {
-		logging.Error("下载 %s 失败, 原因: %s", url, err)
+		console.Error("下载 %s 失败, 原因: %s", url, err)
 		return err
 	}
 
@@ -83,14 +84,14 @@ func Download(url string, output string, showProgress bool) error {
 	if showProgress {
 		if resp.Header.Get("Content-Length") != "" {
 			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-			logging.Info("size: %s", stringutils.HumanBytes(size))
+			console.Info("size: %s", stringutils.HumanBytes(size))
 			pw := progress.NewProgressWriter(outputFile, size)
 			pw.SetProgressColor(color.FgCyan)
 			io.Copy(pw, resp.Body)
 			pw.Wait()
 			return nil
 		} else {
-			logging.Warning("content-length is none for url: %s", url)
+			console.Warn("content-length is none for url: %s", url)
 		}
 	}
 
@@ -101,10 +102,10 @@ func Download(url string, output string, showProgress bool) error {
 }
 
 func DownloadLinksInHtml(url string, regex string, output string) {
-	logging.Info("开始解析: %s", url)
+	console.Info("开始解析: %s", url)
 	links := GetLinks(url, regex)
 
-	logging.Info("链接数量: %d", links.Len())
+	console.Info("链接数量: %d", links.Len())
 	if links.Len() <= 0 {
 		os.Exit(0)
 	}
@@ -116,19 +117,20 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 	}
 	taskGroup := syncutils.TaskGroup{
 		Items:        downloadLinks,
+		Title:        fmt.Sprintf("下载: %s", url),
 		ShowProgress: true,
 		Func: func(item interface{}) error {
 			url := item.(string)
 			if err := Download(url, output, false); err != nil {
-				logging.Error("下载失败: %s", url)
+				console.Error("下载失败: %s", url)
 				return err
 			} else {
-				logging.Success("下载完成: %s", url)
+				console.Success("下载完成: %s", url)
 				return nil
 			}
 		},
 	}
-	logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
+	console.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
 	taskGroup.Start()
-	logging.Info("下载完成")
+	console.Info("下载完成")
 }

@@ -3,8 +3,8 @@ package commands
 import (
 	"os"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syscmd"
+	"github.com/BytemanD/go-console/console"
 	"github.com/spf13/cobra"
 )
 
@@ -27,30 +27,30 @@ var ContainerImageSync = &cobra.Command{
 
 		ctl, err := syscmd.GetDefaultContainerCli()
 		if err != nil {
-			logging.Error("获取客户端失败: %s", err)
+			console.Error("获取客户端失败: %s", err)
 			os.Exit(1)
 		}
-		logging.Info("使用容器客户端: %s", ctl.GetCmd())
+		console.Info("使用容器客户端: %s", ctl.GetCmd())
 		srcImage := ctl.GetImageRepo(srcRepo, image)
 
-		logging.Info("拉取镜像: %s", srcImage)
+		console.Info("拉取镜像: %s", srcImage)
 		if err := ctl.Pull(srcImage); err != nil {
-			logging.Error("拉取失败: %s", err)
+			console.Error("拉取失败: %s", err)
 			os.Exit(1)
 		}
 		for _, destRepo := range destRepos {
 			destImage := ctl.GetImageRepo(destRepo, image)
 			if err := ctl.Tag(srcImage, destImage); err != nil {
-				logging.Error("Tag 设置失败: %s", err)
+				console.Error("Tag 设置失败: %s", err)
 				os.Exit(1)
 			}
-			logging.Info("推送镜像: %s", destImage)
+			console.Info("推送镜像: %s", destImage)
 			if err := ctl.Push(destImage); err != nil {
-				logging.Error("失败: %s", err)
+				console.Error("失败: %s", err)
 				os.Exit(1)
 			}
 		}
-		logging.Info("同步完成")
+		console.Info("同步完成")
 	},
 }
 

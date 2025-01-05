@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/BytemanD/easygo/pkg/progress"
+	"github.com/BytemanD/go-console/console"
 )
 
 type TaskGroup struct {
@@ -15,6 +15,7 @@ type TaskGroup struct {
 	ShowProgress bool
 	MaxWorker    int
 	wg           *sync.WaitGroup
+	Title        string
 }
 
 func (g TaskGroup) Start() error {
@@ -28,9 +29,9 @@ func (g TaskGroup) Start() error {
 		g.MaxWorker = runtime.NumCPU()
 	}
 	workers := make(chan struct{}, g.MaxWorker)
-	var bar *progress.ProgressBar
+	var bar *console.Pbr
 	if g.ShowProgress {
-		bar = progress.NewProgressBar(value.Len())
+		bar = console.NewPbr(value.Len(), g.Title)
 	} else {
 		bar = nil
 	}
@@ -40,15 +41,14 @@ func (g TaskGroup) Start() error {
 			workers <- struct{}{}
 			g.Func(o)
 			if bar != nil {
-				// bar.Increment()
-				bar.Increment(1)
+				bar.Ingrement()
 			}
 			<-workers
 		}(value.Index(i).Interface(), g.wg)
 	}
-	g.wg.Wait()
 	if bar != nil {
-		bar.Wait()
+		console.WaitPbrs()
 	}
+	g.wg.Wait()
 	return nil
 }

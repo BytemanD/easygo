@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/terminal"
+	"github.com/BytemanD/go-console/console"
 )
 
 var MDRender = &cobra.Command{
@@ -25,13 +25,13 @@ var MDRender = &cobra.Command{
 			fp := fileutils.FilePath{Path: args[0]}
 			content, err = fp.ReadAll()
 			if err != nil {
-				logging.Fatal("read from file %s failed", fp.Path)
+				console.Fatal("read from file %s failed", fp.Path)
 			}
 			term = terminal.CurTerminal()
 		} else {
 			bytes, err := io.ReadAll(os.Stdin)
 			if err != nil {
-				logging.Fatal("read from stdin failed")
+				console.Fatal("read from stdin failed")
 			}
 			content = string(bytes)
 		}

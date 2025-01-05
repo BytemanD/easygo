@@ -5,15 +5,15 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 func GetOutput(command string, args ...string) (string, error) {
-	logging.Debug("Run: %s %s", command, strings.Join(args, " "))
+	console.Debug("Run: %s %s", command, strings.Join(args, " "))
 	cmd := exec.Command(command, args...)
 	cmd.Stdin = os.Stdin
 	out, err := cmd.CombinedOutput()
-	logging.Debug("Output: %s, Error: %v", out, err)
+	console.Debug("Output: %s, Error: %v", out, err)
 	if err != nil {
 		return "", err
 	}

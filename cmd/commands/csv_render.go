@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 
@@ -72,12 +72,12 @@ var CSVRender = &cobra.Command{
 			fp := fileutils.FilePath{Path: args[0]}
 			content, err = fp.ReadAll()
 			if err != nil {
-				logging.Fatal("read from file %s failed", fp.Path)
+				console.Fatal("read from file %s failed", fp.Path)
 			}
 		} else {
 			bytes, err := io.ReadAll(os.Stdin)
 			if err != nil {
-				logging.Fatal("read from stdin failed")
+				console.Fatal("read from stdin failed")
 			}
 			content = string(bytes)
 		}

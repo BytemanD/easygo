@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 	"github.com/fatih/color"
 )
 
@@ -70,7 +70,7 @@ func (bar *ProgressBar) Start() {
 		for {
 			size := <-bar.channel
 			bar.completed += size
-			logging.Debug("tolal: %d, comleted: %d", bar.Total, bar.completed)
+			console.Debug("tolal: %d, comleted: %d", bar.Total, bar.completed)
 			bar.printProgress()
 			if bar.completed >= bar.Total {
 				break

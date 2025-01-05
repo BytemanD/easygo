@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	httpLib "github.com/BytemanD/easygo/pkg/http"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/BytemanD/easygo/pkg/table"
+	"github.com/BytemanD/go-console/console"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -34,7 +34,7 @@ var UHD_CHOICES = []string{UHD_ONLY, UHD_INCLUDE, UHD_NO}
 
 func bingImgDownload(page int8, uhd string, output string) {
 	url := fmt.Sprintf(URL_WWW_BINGIMG_CN, strconv.Itoa(int(page)))
-	logging.Info("解析页面 %s", url)
+	console.Info("解析页面 %s", url)
 	doc := httpLib.GetHtml(url)
 	links := list.New()
 
@@ -53,12 +53,12 @@ func bingImgDownload(page int8, uhd string, output string) {
 		}
 	})
 	if links.Len() == 0 {
-		logging.Warning("页面 %s 无图片链接", url)
+		console.Warn("页面 %s 无图片链接", url)
 		os.Exit(0)
 	}
-	logging.Info("开始下载, 保存路径: %s", output)
+	console.Info("开始下载, 保存路径: %s", output)
 	for link := links.Front(); link != nil; link = link.Next() {
-		logging.Debug("下载 %s", link.Value)
+		console.Debug("下载 %s", link.Value)
 		httpLib.Download(fmt.Sprintf("%s", link.Value), output, false)
 	}
 }
@@ -122,7 +122,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 
 		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, date)
-		logging.Info("解析页面 %s", reqUrl)
+		console.Info("解析页面 %s", reqUrl)
 		doc := httpLib.GetHtml(reqUrl)
 		files := []httpLib.HttpFile{}
 		doc.Find("a").Each(func(_ int, s *goquery.Selection) {
@@ -137,7 +137,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 			}
 		})
 		if len(files) == 0 {
-			logging.Warning("页面 %s 无图片链接", reqUrl)
+			console.Warn("页面 %s 无图片链接", reqUrl)
 			os.Exit(0)
 		}
 		type webFile struct {
@@ -151,6 +151,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 		taskGroup := syncutils.TaskGroup{
 			Items:        files,
 			ShowProgress: true,
+			Title:        fmt.Sprintf("download %d picture(s)", len(files)),
 			MaxWorker:    workers,
 			Func: func(item interface{}) error {
 				file := item.(httpLib.HttpFile)
@@ -158,10 +159,10 @@ var BingImgWdbyteCmd = &cobra.Command{
 				err := downloader.Download(&file)
 				var result string
 				if err != nil {
-					logging.Error("下载失败: %s", file.Url)
+					console.Error("下载失败: %s", file.Url)
 					result = "😞"
 				} else {
-					logging.Info("下载完成: %s, Size: %d", file.Name, file.GetSize())
+					console.Info("下载完成: %s, Size: %d", file.Name, file.GetSize())
 					result = "👌"
 				}
 				webFiles = append(webFiles, webFile{
@@ -172,7 +173,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 				return err
 			},
 		}
-		logging.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
+		console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
 		taskGroup.Start()
 
 		result, _ := table.NewItemsTable(

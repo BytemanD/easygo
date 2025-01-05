@@ -1,11 +1,11 @@
 module github.com/BytemanD/easygo
 
-go 1.21
+go 1.21.5
 
 require (
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/fatih/color v1.15.0
+	github.com/fatih/color v1.18.0
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/spf13/cobra v1.7.0
 )
@@ -19,6 +19,7 @@ require (
 )
 
 require (
+	github.com/BytemanD/go-console v0.0.3 // indirect
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
 	github.com/alecthomas/chroma v0.7.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
@@ -58,7 +59,8 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/image v0.0.0-20191206065243-da761ea9ff43 // indirect
-	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
+	"github.com/BytemanD/go-console/console"
 )
 
 type Session struct {
@@ -17,7 +17,7 @@ func (session *Session) Request(req *http.Request, headers map[string]string) (*
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
-	logging.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL, headers, req.Body)
+	console.Debug("Req: %s %s with headers: %v, body: %v", req.Method, req.URL, headers, req.Body)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -29,7 +29,7 @@ func (session *Session) Request(req *http.Request, headers map[string]string) (*
 		Body:    content,
 		Status:  resp.StatusCode,
 		Headers: resp.Header}
-	logging.Debug("Status: %s, Body: %s", resp.Status, content)
+	console.Debug("Status: %s, Body: %s", resp.Status, content)
 	return &response, response.JudgeStatus()
 }
 

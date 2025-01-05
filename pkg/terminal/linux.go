@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/syscmd"
+	"github.com/BytemanD/go-console/console"
 )
 
 type Terminal struct {
@@ -17,7 +17,7 @@ type Terminal struct {
 func getLinuxTerminal() *Terminal {
 	out, err := syscmd.GetOutput("stty", "size")
 	if err != nil {
-		logging.Warning("get terminal falied, %s %s", out, err)
+		console.Warn("get terminal falied, %s %s", out, err)
 		return nil
 	}
 	values := strings.Split(string(out), " ")
@@ -34,7 +34,7 @@ func CurTerminal() *Terminal {
 	case "linux":
 		return getLinuxTerminal()
 	default:
-		logging.Warning("get terminal for %s is not supported", runtime.GOOS)
+		console.Warn("get terminal for %s is not supported", runtime.GOOS)
 		return nil
 	}
 }

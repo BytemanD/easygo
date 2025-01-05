@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/BytemanD/easygo/pkg/global/logging"
 	"github.com/BytemanD/easygo/pkg/http"
+	"github.com/BytemanD/go-console/console"
 
 	"github.com/BytemanD/easygo/pkg/progress"
 	"github.com/BytemanD/easygo/pkg/stringutils"
@@ -35,10 +35,10 @@ var Wget = &cobra.Command{
 		url := args[0]
 		output, _ := cmd.Flags().GetString("output")
 
-		logging.Info("saving to %s", output)
+		console.Info("saving to %s", output)
 		err := http.Download(url, output, true)
 		if err != nil {
-			logging.Error("download %s failed: %s", url, err)
+			console.Error("download %s failed: %s", url, err)
 			return
 		}
 	},
