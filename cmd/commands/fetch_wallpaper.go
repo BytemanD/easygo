@@ -124,6 +124,10 @@ var BingImgWdbyteCmd = &cobra.Command{
 		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, date)
 		console.Info("解析页面 %s", reqUrl)
 		doc := httpLib.GetHtml(reqUrl)
+		if doc == nil {
+			console.Warn("页面 %s 请求失败", reqUrl)
+			os.Exit(1)
+		}
 		files := []httpLib.HttpFile{}
 		doc.Find("a").Each(func(_ int, s *goquery.Selection) {
 			href := s.AttrOr("href", "")
@@ -148,13 +152,18 @@ var BingImgWdbyteCmd = &cobra.Command{
 		}
 		webFiles := []webFile{}
 		downloader := httpLib.HttpDownloader{Output: output}
-		taskGroup := syncutils.TaskGroup{
-			Items:        files,
-			ShowProgress: true,
-			Title:        fmt.Sprintf("download %d picture(s)", len(files)),
-			MaxWorker:    workers,
-			Func: func(item interface{}) error {
-				file := item.(httpLib.HttpFile)
+
+		syncutils.StartTasks(
+			syncutils.TaskOption{
+				TaskName:     fmt.Sprintf("download %d picture(s)", len(files)),
+				MaxWorker:    workers,
+				ShowProgress: true,
+				PreStart: func() {
+					console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
+				},
+			},
+			files,
+			func(file httpLib.HttpFile) error {
 				startTime := time.Now()
 				err := downloader.Download(&file)
 				var result string
@@ -172,9 +181,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 				})
 				return err
 			},
-		}
-		console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
-		taskGroup.Start()
+		)
 
 		result, _ := table.NewItemsTable(
 			[]string{"Result", "Name", "Size", "Spend"}, webFiles,

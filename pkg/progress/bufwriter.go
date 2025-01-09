@@ -4,30 +4,25 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/fatih/color"
+	"github.com/BytemanD/go-console/console"
 )
 
 type ProgressWriter struct {
 	Writer *bufio.Writer
-	bar    *ProgressBar
+	bar    *console.Pbr
 }
 
 func (pw ProgressWriter) Write(p []byte) (n int, err error) {
 	n, err = pw.Writer.Write(p)
-	pw.bar.Increment(len(p))
+	pw.bar.IngrementN(len(p))
 	return
 }
-func (pw ProgressWriter) Wait() {
-	pw.bar.Wait()
-	pw.Writer.Flush()
-}
 
-func (pw ProgressWriter) SetProgressColor(attrs ...color.Attribute) {
-	pw.bar.SetColor(attrs...)
-}
 func NewProgressWriter(w io.Writer, total int) ProgressWriter {
+	pbr := console.NewPbr(total, "write progress")
+	go console.WaitPbrs()
 	return ProgressWriter{
 		Writer: bufio.NewWriter(w),
-		bar:    NewProgressBar(total),
+		bar:    pbr,
 	}
 }

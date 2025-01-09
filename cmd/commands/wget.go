@@ -67,5 +67,5 @@ func init() {
 	Wget.Flags().StringP("output", "O", "./", "保存路径")
 
 	WgetLinks.Flags().StringP("regex", "r", "", "匹配正则表达式，例如: .rpm")
-	WgetLinks.Flags().StringP("output", "o", "./", "保存路径")
+	WgetLinks.Flags().StringP("output", "O", "./", "保存路径")
 }

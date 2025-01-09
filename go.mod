@@ -3,6 +3,7 @@ module github.com/BytemanD/easygo
 go 1.21.5
 
 require (
+	github.com/BytemanD/go-console v0.0.4
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/fatih/color v1.18.0
@@ -19,7 +20,6 @@ require (
 )
 
 require (
-	github.com/BytemanD/go-console v0.0.3 // indirect
 	github.com/MichaelMure/go-term-text v0.3.1 // indirect
 	github.com/alecthomas/chroma v0.7.1 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect

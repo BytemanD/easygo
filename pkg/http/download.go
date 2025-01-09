@@ -20,7 +20,6 @@ import (
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/PuerkitoBio/goquery"
-	"github.com/fatih/color"
 )
 
 func GetHtml(url string) *goquery.Document {
@@ -86,9 +85,7 @@ func Download(url string, output string, showProgress bool) error {
 			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 			console.Info("size: %s", stringutils.HumanBytes(size))
 			pw := progress.NewProgressWriter(outputFile, size)
-			pw.SetProgressColor(color.FgCyan)
 			io.Copy(pw, resp.Body)
-			pw.Wait()
 			return nil
 		} else {
 			console.Warn("content-length is none for url: %s", url)
@@ -117,7 +114,7 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 	}
 	taskGroup := syncutils.TaskGroup{
 		Items:        downloadLinks,
-		Title:        fmt.Sprintf("下载: %s", url),
+		Title:        fmt.Sprintf("download: %s", url),
 		ShowProgress: true,
 		Func: func(item interface{}) error {
 			url := item.(string)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/BytemanD/go-console/console"
@@ -41,7 +42,7 @@ func (g TaskGroup) Start() error {
 			workers <- struct{}{}
 			g.Func(o)
 			if bar != nil {
-				bar.Ingrement()
+				bar.Increment()
 			}
 			<-workers
 		}(value.Index(i).Interface(), g.wg)
@@ -51,4 +52,59 @@ func (g TaskGroup) Start() error {
 	}
 	g.wg.Wait()
 	return nil
+}
+
+type TaskOption struct {
+	TaskName     string
+	MaxWorker    int
+	ShowProgress bool
+	PreStart     func()
+}
+
+func StartTasks[T any](opt TaskOption, items []T, taskFunc func(item T) error) error {
+	wg := &sync.WaitGroup{}
+	wg.Add(len(items))
+
+	chans := make(chan struct{}, max(opt.MaxWorker, 1))
+	errs := []error{}
+
+	var bar *console.Pbr
+	if opt.ShowProgress {
+		title := opt.TaskName
+		if opt.TaskName == "" {
+			title = "tasks progress"
+		}
+		bar = console.NewPbr(len(items), title)
+		go console.WaitPbrs()
+	}
+	if opt.PreStart != nil {
+		opt.PreStart()
+	}
+	for _, item := range items {
+		chans <- struct{}{}
+		arg := item
+		go func() {
+			defer func() {
+				if bar != nil {
+					bar.Increment()
+				}
+				wg.Done()
+			}()
+			err := taskFunc(arg)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			<-chans
+		}()
+	}
+	wg.Wait()
+	if len(errs) == 0 {
+		return nil
+	}
+	details := []string{}
+	for _, err := range errs {
+		details = append(details, err.Error())
+	}
+	return fmt.Errorf("task group '%s' has %d fails: %s",
+		opt.TaskName, len(errs), strings.Join(details, "; "))
 }
