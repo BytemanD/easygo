@@ -10,6 +10,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -84,7 +85,7 @@ func Download(url string, output string, showProgress bool) error {
 		if resp.Header.Get("Content-Length") != "" {
 			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 			console.Info("size: %s", stringutils.HumanBytes(size))
-			pw := progress.NewProgressWriter(outputFile, size)
+			pw := progress.NewProgressWriter(fileName, outputFile, size)
 			io.Copy(pw, resp.Body)
 			return nil
 		} else {
@@ -112,22 +113,24 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 		downloadLinks = append(downloadLinks, fmt.Sprintf("%s", link.Value))
 		link = link.Next()
 	}
-	taskGroup := syncutils.TaskGroup{
-		Items:        downloadLinks,
-		Title:        fmt.Sprintf("download: %s", url),
-		ShowProgress: true,
-		Func: func(item interface{}) error {
-			url := item.(string)
-			if err := Download(url, output, false); err != nil {
-				console.Error("下载失败: %s", url)
+	console.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
+	syncutils.StartTasks(
+		syncutils.TaskOption{
+			MaxWorker:    runtime.NumCPU(),
+			ShowProgress: true,
+			TaskName:     fmt.Sprintf("下载: %s", url),
+		},
+		downloadLinks[0:10],
+		func(item string) error {
+			console.Info("开始下载: %s", item)
+			if err := Download(item, output, false); err != nil {
+				console.Error("下载失败: %s", item)
 				return err
 			} else {
-				console.Success("下载完成: %s", url)
+				console.Success("下载完成: %s", item)
 				return nil
 			}
 		},
-	}
-	console.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
-	taskGroup.Start()
+	)
 	console.Info("下载完成")
 }

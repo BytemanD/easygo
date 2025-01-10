@@ -14,12 +14,12 @@ type ProgressWriter struct {
 
 func (pw ProgressWriter) Write(p []byte) (n int, err error) {
 	n, err = pw.Writer.Write(p)
-	pw.bar.IngrementN(len(p))
+	pw.bar.IncrementN(len(p))
 	return
 }
 
-func NewProgressWriter(w io.Writer, total int) ProgressWriter {
-	pbr := console.NewPbr(total, "write progress")
+func NewProgressWriter(title string, w io.Writer, total int) ProgressWriter {
+	pbr := console.NewPbr(total, title)
 	go console.WaitPbrs()
 	return ProgressWriter{
 		Writer: bufio.NewWriter(w),
