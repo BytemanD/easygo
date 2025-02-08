@@ -3,7 +3,7 @@ module github.com/BytemanD/easygo/pkg
 go 1.21.5
 
 require (
-	github.com/BytemanD/go-console v0.0.4
+	github.com/BytemanD/go-console v0.0.4-2
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/fatih/color v1.18.0
 	github.com/gin-gonic/gin v1.10.0

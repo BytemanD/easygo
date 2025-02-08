@@ -20,7 +20,6 @@ func (pw ProgressWriter) Write(p []byte) (n int, err error) {
 
 func NewProgressWriter(title string, w io.Writer, total int) ProgressWriter {
 	pbr := console.NewPbr(total, title)
-	go console.WaitPbrs()
 	return ProgressWriter{
 		Writer: bufio.NewWriter(w),
 		bar:    pbr,

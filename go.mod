@@ -3,7 +3,7 @@ module github.com/BytemanD/easygo
 go 1.21.5
 
 require (
-	github.com/BytemanD/go-console v0.0.4
+	github.com/BytemanD/go-console v0.0.4-2
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/fatih/color v1.18.0
@@ -15,7 +15,7 @@ require (
 	github.com/BytemanD/easygo/pkg v0.0.0
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.5
 	golang.org/x/net v0.25.0 // indirect
 )
 

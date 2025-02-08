@@ -1,5 +1,5 @@
-github.com/BytemanD/go-console v0.0.4 h1:QSd+XN7Mz96dPteH0Z8wVifqaBZT5yVwwkaP5FvbvTA=
-github.com/BytemanD/go-console v0.0.4/go.mod h1:kUEesd8gZozoG9VaNL/aaxADHdpotPORHf0taq5RuG4=
+github.com/BytemanD/go-console v0.0.4-2 h1:Iele0XhiEdUu8OsuB81gDnb++W5YzE7/7SySsdGMbtQ=
+github.com/BytemanD/go-console v0.0.4-2/go.mod h1:kUEesd8gZozoG9VaNL/aaxADHdpotPORHf0taq5RuG4=
 github.com/MichaelMure/go-term-markdown v0.1.4 h1:Ir3kBXDUtOX7dEv0EaQV8CNPpH+T7AfTh0eniMOtNcs=
 github.com/MichaelMure/go-term-markdown v0.1.4/go.mod h1:EhcA3+pKYnlUsxYKBJ5Sn1cTQmmBMjeNlpV8nRb+JxA=
 github.com/MichaelMure/go-term-text v0.3.1 h1:Kw9kZanyZWiCHOYu9v/8pWEgDQ6UVN9/ix2Vd2zzWf0=

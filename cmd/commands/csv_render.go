@@ -29,10 +29,14 @@ var TABLE_COLORS = map[string]text.Color{
 	"green":  text.FgGreen,
 }
 
-func getRow(columns []string) table.Row {
+func getRow(columns []string, color ...text.Color) table.Row {
+	renderFunc := fmt.Sprintf
+	if len(color) > 0 {
+		renderFunc = color[0].Sprintf
+	}
 	tableRow := table.Row{}
 	for _, column := range columns {
-		tableRow = append(tableRow, column)
+		tableRow = append(tableRow, renderFunc(column))
 	}
 	return tableRow
 }
@@ -42,7 +46,7 @@ var CSVRender = &cobra.Command{
 	Short: "CSV格式渲染表格",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		hasHeader, _ := cmd.Flags().GetBool("header")
+		noHeader, _ := cmd.Flags().GetBool("no-header")
 		style, _ := cmd.Flags().GetString("style")
 		color, _ := cmd.Flags().GetString("color")
 
@@ -90,14 +94,14 @@ var CSVRender = &cobra.Command{
 			header string
 			rows   []string
 		)
-		if hasHeader {
-			header, rows = lines[0], lines[1:]
-		} else {
+		if noHeader {
 			rows = lines
+		} else {
+			header, rows = lines[0], lines[1:]
 		}
 
 		if header != "" {
-			tableWriter.AppendHeader(getRow(strings.Split(header, ",")))
+			tableWriter.AppendHeader(getRow(strings.Split(header, ","), TABLE_COLORS[color]))
 		}
 
 		for _, line := range rows {
@@ -112,8 +116,8 @@ var CSVRender = &cobra.Command{
 }
 
 func init() {
-	CSVRender.Flags().Bool("header", false, "Has table header")
+	CSVRender.Flags().Bool("no-header", false, "Has table header")
 	CSVRender.Flags().String("style", "default", "Table style. default, light, rounded, bold")
-	CSVRender.Flags().String("color", "", "Table color")
+	CSVRender.Flags().String("color", "blue", "Table color")
 
 }

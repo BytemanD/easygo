@@ -48,7 +48,7 @@ func (g TaskGroup) Start() error {
 		}(value.Index(i).Interface(), g.wg)
 	}
 	if bar != nil {
-		console.WaitPbrs()
+		go console.WaitAllPbrs()
 	}
 	g.wg.Wait()
 	return nil
@@ -75,7 +75,7 @@ func StartTasks[T any](opt TaskOption, items []T, taskFunc func(item T) error) e
 			title = "tasks progress"
 		}
 		bar = console.NewPbr(len(items), title)
-		go console.WaitPbrs()
+		go console.WaitAllPbrs()
 	}
 	if opt.PreStart != nil {
 		opt.PreStart()
