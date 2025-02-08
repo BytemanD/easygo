@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BytemanD/easygo/cli"
 	httpLib "github.com/BytemanD/easygo/pkg/http"
 	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
@@ -17,6 +18,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 const (
@@ -32,10 +34,26 @@ const (
 
 var UHD_CHOICES = []string{UHD_ONLY, UHD_INCLUDE, UHD_NO}
 
+type bingImgCmdFlags struct {
+	Uhd     *string
+	Output  *string
+	EndPage *int8
+}
+type bingImgWdbyteCmdFlags struct {
+	Output  *string
+	Workers *int
+	Limit   *int
+	Date    *string
+}
+
 func bingImgDownload(page int8, uhd string, output string) {
 	url := fmt.Sprintf(URL_WWW_BINGIMG_CN, strconv.Itoa(int(page)))
 	console.Info("解析页面 %s", url)
 	doc := httpLib.GetHtml(url)
+	if doc == nil {
+		console.Error("get url %s failed", url)
+		return
+	}
 	links := list.New()
 
 	doc.Find("a").Each(func(_ int, s *goquery.Selection) {
@@ -68,60 +86,69 @@ var FetchWallpaperCmd = &cobra.Command{
 	Short: "下载壁纸",
 }
 
-var BingImgCmd = &cobra.Command{
+var BingImgCmd = cli.NewCommand(cli.Cli[bingImgCmdFlags]{
 	Use:              "bingimg <page>",
 	Short:            "下载 www.bingimg.cn 网站的壁纸",
 	TraverseChildren: true,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
-			return err
+	RegistryFlags: func(fs *pflag.FlagSet) bingImgCmdFlags {
+		return bingImgCmdFlags{
+			Uhd:     fs.StringP("uhd", "u", "only", "下载4K分辨率"),
+			Output:  fs.StringP("output", "o", "./", "保存路径"),
+			EndPage: fs.Int8P("end-page", "e", 0, "结束的页面, 默认和page相同"),
 		}
-		if _, err := stringutils.MustGreaterThan(args[0], 1); err != nil {
-			return fmt.Errorf("invalid arg 'page': %s", err)
-		}
-		uhd, _ := cmd.Flags().GetString("uhd")
-		if err := stringutils.MustInStringChoises(uhd, UHD_CHOICES); err != nil {
-			return fmt.Errorf("invalid flag 'uhd': %s", err)
-		}
-		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		uhd, _ := cmd.Flags().GetString("uhd")
-		output, _ := cmd.Flags().GetString("output")
-		endPage, _ := cmd.Flags().GetInt8("end-page")
+	ValidArgs: []cobra.PositionalArgs{
+		cobra.ExactArgs(1),
+		func(cmd *cobra.Command, args []string) error {
+			if _, err := stringutils.MustGreaterThan(args[0], 1); err != nil {
+				return fmt.Errorf("invalid arg 'page': %s", err)
+			}
+			uhd, _ := cmd.Flags().GetString("uhd")
+			if err := stringutils.MustInStringChoises(uhd, UHD_CHOICES); err != nil {
+				return fmt.Errorf("invalid flag 'uhd': %s", err)
+			}
+			return nil
+		},
+	},
+	Run: func(args []string, flags bingImgCmdFlags) error {
 		pageInt, _ := strconv.Atoi(args[0])
 		page := int8(pageInt)
-		if endPage <= 0 {
-			endPage = page
+		if *flags.EndPage <= 0 {
+			flags.EndPage = &page
 		}
-		for i := page; i <= endPage; i++ {
-			bingImgDownload(i, uhd, output)
-		}
-	},
-}
-var BingImgWdbyteCmd = &cobra.Command{
-	Use:              "bingimg-wdbyte",
-	Short:            "下载 bing.wdbyte.com 网站的壁纸",
-	TraverseChildren: true,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.ExactArgs(0)(cmd, args); err != nil {
-			return err
-		}
-		date, _ := cmd.Flags().GetString("date")
-		if date != "" {
-			if err := stringutils.MustMatch(date, "^[0-9]+-[0-9]+$"); err != nil {
-				return fmt.Errorf("invalid flag 'date', %s", err)
-			}
+		for i := page; i <= *flags.EndPage; i++ {
+			bingImgDownload(i, *flags.Uhd, *flags.Output)
 		}
 		return nil
 	},
-	Run: func(cmd *cobra.Command, args []string) {
-		date, _ := cmd.Flags().GetString("date")
-		output, _ := cmd.Flags().GetString("output")
-		workers, _ := cmd.Flags().GetInt("workers")
-		limit, _ := cmd.Flags().GetInt("limit")
+})
 
-		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, date)
+var BingImgWdbyteCmd = cli.NewCommand(cli.Cli[bingImgWdbyteCmdFlags]{
+	Use:              "bingimg-wdbyte",
+	Short:            "下载 www.bingimg.cn 网站的壁纸",
+	TraverseChildren: true,
+	RegistryFlags: func(fs *pflag.FlagSet) bingImgWdbyteCmdFlags {
+		return bingImgWdbyteCmdFlags{
+			Output:  fs.StringP("output", "O", "./", "保存路径"),
+			Workers: fs.Int("workers", 0, "并发数"),
+			Limit:   fs.Int("limit", 0, "下载条数"),
+			Date:    fs.String("date", "", "日期, 例如: 2023-09"),
+		}
+	},
+	ValidArgs: []cobra.PositionalArgs{
+		cobra.ExactArgs(0),
+		func(cmd *cobra.Command, args []string) error {
+			date, _ := cmd.Flags().GetString("date")
+			if date != "" {
+				if err := stringutils.MustMatch(date, "^[0-9]+-[0-9]+$"); err != nil {
+					return fmt.Errorf("invalid flag 'date', %s", err)
+				}
+			}
+			return nil
+		},
+	},
+	Run: func(args []string, flags bingImgWdbyteCmdFlags) error {
+		reqUrl := fmt.Sprintf("%s/%s", URL_BING_WDBYTE_COM, *flags.Date)
 		console.Info("解析页面 %s", reqUrl)
 		doc := httpLib.GetHtml(reqUrl)
 		if doc == nil {
@@ -132,7 +159,7 @@ var BingImgWdbyteCmd = &cobra.Command{
 		doc.Find("a").Each(func(_ int, s *goquery.Selection) {
 			href := s.AttrOr("href", "")
 			if err := stringutils.MustMatch(href, `.*id=.+\.jpg`); err == nil {
-				if limit > 0 && len(files) >= limit {
+				if *flags.Limit > 0 && len(files) >= *flags.Limit {
 					return
 				}
 				urlParsed, _ := url.Parse(href)
@@ -151,15 +178,15 @@ var BingImgWdbyteCmd = &cobra.Command{
 			Spend  time.Duration
 		}
 		webFiles := []webFile{}
-		downloader := httpLib.HttpDownloader{Output: output}
+		downloader := httpLib.HttpDownloader{Output: *flags.Output}
 
 		syncutils.StartTasks(
 			syncutils.TaskOption{
 				TaskName:     fmt.Sprintf("download %d picture(s)", len(files)),
-				MaxWorker:    workers,
+				MaxWorker:    *flags.Workers,
 				ShowProgress: true,
 				PreStart: func() {
-					console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), output)
+					console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), *flags.Output)
 				},
 			},
 			files,
@@ -189,18 +216,10 @@ var BingImgWdbyteCmd = &cobra.Command{
 			table.StyleLight, color.FgCyan,
 		).EnableAutoIndex().Render()
 		fmt.Println(result)
+		return nil
 	},
-}
+})
 
 func init() {
-	BingImgCmd.Flags().StringP("uhd", "u", "only", "下载4K分辨率")
-	BingImgCmd.Flags().StringP("output", "o", "./", "保存路径")
-	BingImgCmd.Flags().Int8P("end-page", "e", 0, "结束的页面, 默认和page相同")
-
-	BingImgWdbyteCmd.Flags().StringP("output", "o", "./", "保存路径")
-	BingImgWdbyteCmd.Flags().Int("workers", 0, "并发数")
-	BingImgWdbyteCmd.Flags().Int("limit", 0, "下载条数")
-	BingImgWdbyteCmd.Flags().String("date", "", "日期, 例如: 2023-09")
-
 	FetchWallpaperCmd.AddCommand(BingImgCmd, BingImgWdbyteCmd)
 }
