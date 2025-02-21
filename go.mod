@@ -6,6 +6,7 @@ require (
 	github.com/BytemanD/go-console v0.0.4-2
 	github.com/MichaelMure/go-term-markdown v0.1.4
 	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/duke-git/lancet/v2 v2.3.4
 	github.com/fatih/color v1.18.0
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/spf13/cobra v1.7.0
@@ -29,7 +30,6 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/dlclark/regexp2 v1.1.6 // indirect
-	github.com/duke-git/lancet/v2 v2.3.4 // indirect
 	github.com/eliukblau/pixterm/pkg/ansimage v0.0.0-20191210081756-9fb6cf8c2f75 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
