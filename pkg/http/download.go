@@ -1,7 +1,6 @@
 package http
 
 import (
-	"bufio"
 	"container/list"
 	"fmt"
 	"io"
@@ -11,14 +10,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"github.com/BytemanD/go-console/console"
+	"github.com/go-resty/resty/v2"
 
 	"github.com/BytemanD/easygo/pkg/fileutils"
 	"github.com/BytemanD/easygo/pkg/progress"
-	"github.com/BytemanD/easygo/pkg/stringutils"
 	"github.com/BytemanD/easygo/pkg/syncutils"
 	"github.com/PuerkitoBio/goquery"
 )
@@ -62,40 +60,45 @@ func GetLinks(url string, regex string) list.List {
 	return *links
 }
 
+type ProgressWriter struct {
+	ToalBytes int64
+	completed int
+}
+
+func (w *ProgressWriter) Write(p []byte) (n int, err error) {
+	w.completed += len(p)
+	fmt.Printf("=== > %d/%d\n", w.completed, w.ToalBytes)
+	return len(p), nil
+}
+
 func Download(url string, output string, showProgress bool) error {
 	_, fileName := filepath.Split(url)
-	resp, err := http.Get(url)
-	if err != nil {
-		console.Error("下载 %s 失败, 原因: %s", url, err)
+	client := resty.New()
+	if !showProgress {
+		_, err := client.SetOutputDirectory(output).R().SetOutput(fileName).Get(url)
 		return err
 	}
 
-	defer resp.Body.Close()
+	console.Debug("fetch %s ...", url)
+	resp, err := client.SetDoNotParseResponse(true).R().Get(url)
+	if err != nil {
+		return err
+	}
 
 	fp := fileutils.FilePath{Path: output}
 	if err := fp.MakeDirs(); err != nil {
 		return err
 	}
-
-	outputPath := path.Join(output, fileName)
-	outputFile, _ := os.Create(outputPath)
+	outputFile, err := os.OpenFile(path.Join(output, fileName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
 	defer outputFile.Close()
 
-	if showProgress {
-		if resp.Header.Get("Content-Length") != "" {
-			size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
-			console.Info("size: %s", stringutils.HumanBytes(size))
-			pw := progress.NewProgressWriter(fileName, outputFile, size)
-			io.Copy(pw, resp.Body)
-			return nil
-		} else {
-			console.Warn("content-length is none for url: %s", url)
-		}
-	}
+	pbrWriter := progress.DefaultBytesWriter(fileName, resp.RawResponse.ContentLength)
+	console.Debug("saving to %s", path.Join(output, fileName))
+	resp.RawResponse.Write(io.MultiWriter(pbrWriter))
 
-	wt := bufio.NewWriter(outputFile)
-	wt.Flush()
-	io.Copy(wt, resp.Body)
 	return nil
 }
 
@@ -118,11 +121,11 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 		syncutils.TaskOption{
 			MaxWorker:    runtime.NumCPU(),
 			ShowProgress: true,
-			TaskName:     fmt.Sprintf("下载: %s", url),
+			TaskName:     fmt.Sprintf("下载%d个文件", len(downloadLinks)),
 		},
-		downloadLinks[0:10],
+		downloadLinks,
 		func(item string) error {
-			console.Info("开始下载: %s", item)
+			console.Debug("开始下载: %s", item)
 			if err := Download(item, output, false); err != nil {
 				console.Error("下载失败: %s", item)
 				return err

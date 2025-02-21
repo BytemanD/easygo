@@ -8,10 +8,11 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-ini/ini v1.67.0
+	github.com/go-resty/resty/v2 v2.16.5
 	github.com/jedib0t/go-pretty/v6 v6.5.6
 	github.com/satori/go.uuid v1.2.0
 	github.com/wxnacy/wgo v1.0.4
-	golang.org/x/text v0.15.0
+	golang.org/x/text v0.21.0
 )
 
 require (
@@ -39,10 +40,10 @@ require (
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/net v0.25.0 // indirect
-	golang.org/x/sys v0.25.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/crypto v0.31.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/term v0.27.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

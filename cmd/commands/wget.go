@@ -34,9 +34,10 @@ var Wget = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
 		output, _ := cmd.Flags().GetString("output")
+		quiet, _ := cmd.Flags().GetBool("quiet")
 
-		console.Info("saving to %s", output)
-		err := http.Download(url, output, true)
+		console.Info("download %s", url)
+		err := http.Download(url, output, !quiet)
 		if err != nil {
 			console.Error("download %s failed: %s", url, err)
 			return
@@ -65,6 +66,7 @@ var WgetLinks = &cobra.Command{
 
 func init() {
 	Wget.Flags().StringP("output", "O", "./", "保存路径")
+	Wget.Flags().BoolP("quiet", "q", false, "quiet")
 
 	WgetLinks.Flags().StringP("regex", "r", "", "匹配正则表达式，例如: .rpm")
 	WgetLinks.Flags().StringP("output", "O", "./", "保存路径")

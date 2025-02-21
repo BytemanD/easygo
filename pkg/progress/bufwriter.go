@@ -25,3 +25,19 @@ func NewProgressWriter(title string, w io.Writer, total int) ProgressWriter {
 		bar:    pbr,
 	}
 }
+
+type BytesWriter struct {
+	bar *console.Pbr
+}
+
+func (w BytesWriter) Write(p []byte) (n int, err error) {
+	n = len(p)
+	w.bar.IncrementN(n)
+	return
+}
+
+func DefaultBytesWriter(title string, total int64) *BytesWriter {
+	return &BytesWriter{
+		bar: console.NewPbr(int(total), title),
+	}
+}
