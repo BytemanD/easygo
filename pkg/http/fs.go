@@ -87,23 +87,22 @@ func (webFile *WebFile) HumanSize() string {
 	}
 }
 
-func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
-	filePath := filepath.Join(FSConfig.Root, request.URL.Path)
-	filePath = strings.ReplaceAll(filePath, "\\", "/")
-	file, _ := os.Open(filePath)
-	defer file.Close()
+// func handleFileDownload(respWriter http.ResponseWriter, request *http.Request) {
+// 	filePath := filepath.Join(FSConfig.Root, request.URL.Path)
+// 	filePath = strings.ReplaceAll(filePath, "\\", "/")
+// 	file, _ := os.Open(filePath)
+// 	defer file.Close()
 
-	console.Info("下载文件: %s", file.Name())
-	respWriter.Header().Set("Content-Disposition", "attachment; filename="+
-		filepath.Base(file.Name()))
-	http.ServeFile(respWriter, request, filePath)
-}
+// 	console.Info("下载文件: %s", file.Name())
+// 	respWriter.Header().Set("Content-Disposition", "attachment; filename="+
+// 		filepath.Base(file.Name()))
+// 	http.ServeFile(respWriter, request, filePath)
+// }
 
 type VuetifyHttpFS struct {
-	Port          int16
-	Root          string
-	StaticPath    string
-	staticFileMap string
+	Port       int16
+	Root       string
+	StaticPath string
 }
 
 type DirEntry struct {
@@ -144,9 +143,7 @@ func (s VuetifyHttpFS) index(c *gin.Context) {
 
 func (s VuetifyHttpFS) getQueryPath(c *gin.Context) string {
 	dirPath := c.Query("path")
-	if strings.HasPrefix(dirPath, "/") {
-		dirPath = dirPath[1:]
-	}
+	dirPath = strings.TrimPrefix(dirPath, "/")
 	return dirPath
 }
 func (s VuetifyHttpFS) getEntries(c *gin.Context) {
@@ -168,7 +165,7 @@ func (s VuetifyHttpFS) uploadFile(c *gin.Context) {
 	for _, file := range files {
 		saveFile := path.Join(saveDir, file.Filename)
 		console.Info("saving file to %s", saveFile)
-		if err := c.SaveUploadedFile(file, saveFile); err != nil {
+		if err = c.SaveUploadedFile(file, saveFile); err != nil {
 			break
 		}
 		console.Info("saved file %s", saveFile)
@@ -219,5 +216,5 @@ func (s VuetifyHttpFS) Run() error {
 	}
 	console.Info("启动web服务:\n----\n%s\n----", strings.Join(webAddr, "\n"))
 
-	return r.Run(fmt.Sprintf(s.getServerAddr()))
+	return r.Run(s.getServerAddr())
 }
