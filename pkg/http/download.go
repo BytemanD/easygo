@@ -84,6 +84,9 @@ func Download(url string, output string, showProgress bool) error {
 	if err != nil {
 		return err
 	}
+	if resp.IsError() {
+		return fmt.Errorf("[%d] %s %s", resp.StatusCode(), resp.Status(), resp.Body())
+	}
 
 	fp := fileutils.FilePath{Path: output}
 	if err := fp.MakeDirs(); err != nil {
@@ -95,11 +98,15 @@ func Download(url string, output string, showProgress bool) error {
 	}
 	defer outputFile.Close()
 
-	pbrWriter := progress.DefaultBytesWriter(fileName, resp.RawResponse.ContentLength)
 	console.Debug("saving to %s", path.Join(output, fileName))
-	resp.RawResponse.Write(io.MultiWriter(pbrWriter))
+	writers := []io.Writer{outputFile}
 
-	return nil
+	fmt.Println(resp.RawResponse.ContentLength)
+	if resp.RawResponse.ContentLength > 0 {
+		pbrWriter := progress.DefaultBytesWriter(fileName, resp.RawResponse.ContentLength)
+		writers = append(writers, pbrWriter)
+	}
+	return resp.RawResponse.Write(io.MultiWriter(writers...))
 }
 
 func DownloadLinksInHtml(url string, regex string, output string) {

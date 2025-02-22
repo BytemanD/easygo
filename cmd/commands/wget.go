@@ -36,7 +36,7 @@ var Wget = &cobra.Command{
 		output, _ := cmd.Flags().GetString("output")
 		quiet, _ := cmd.Flags().GetBool("quiet")
 
-		console.Info("download %s", url)
+		console.Debug("download %s", url)
 		err := http.Download(url, output, !quiet)
 		if err != nil {
 			console.Error("download %s failed: %s", url, err)
