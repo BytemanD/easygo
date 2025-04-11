@@ -44,10 +44,10 @@ func (g TaskGroup[T]) Start() error {
 		}(item, g.wg)
 	}
 
-	if bar != nil {
-		go console.WaitAllProgressBar()
-	}
 	g.wg.Wait()
+	if bar != nil {
+		console.WaitAllProgressBar()
+	}
 	return nil
 }
 
