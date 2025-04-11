@@ -1,9 +1,9 @@
 module github.com/BytemanD/easygo/pkg
 
-go 1.21.5
+go 1.24.1
 
 require (
-	github.com/BytemanD/go-console v0.0.4-2
+	github.com/BytemanD/go-console v0.0.6-0.20250411020730-368697ebf830
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/fatih/color v1.18.0
 	github.com/gin-gonic/gin v1.10.0
@@ -37,6 +37,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/samber/lo v1.49.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	golang.org/x/arch v0.8.0 // indirect

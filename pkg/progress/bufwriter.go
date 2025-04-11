@@ -9,7 +9,7 @@ import (
 
 type ProgressWriter struct {
 	Writer *bufio.Writer
-	bar    *console.Pbr
+	bar    *console.ProgressLinear
 }
 
 func (pw ProgressWriter) Write(p []byte) (n int, err error) {
@@ -19,7 +19,8 @@ func (pw ProgressWriter) Write(p []byte) (n int, err error) {
 }
 
 func NewProgressWriter(title string, w io.Writer, total int) ProgressWriter {
-	pbr := console.NewPbr(total, title)
+	pbr := console.NewProgressLinear(total, title)
+	go console.WaitAllProgressBar()
 	return ProgressWriter{
 		Writer: bufio.NewWriter(w),
 		bar:    pbr,
@@ -27,7 +28,7 @@ func NewProgressWriter(title string, w io.Writer, total int) ProgressWriter {
 }
 
 type BytesWriter struct {
-	bar *console.Pbr
+	bar *console.ProgressLinear
 }
 
 func (w BytesWriter) Write(p []byte) (n int, err error) {
@@ -38,6 +39,6 @@ func (w BytesWriter) Write(p []byte) (n int, err error) {
 
 func DefaultBytesWriter(title string, total int64) *BytesWriter {
 	return &BytesWriter{
-		bar: console.NewPbr(int(total), title),
+		bar: console.NewProgressLinear(int(total), title),
 	}
 }

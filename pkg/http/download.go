@@ -9,8 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
+	"time"
 
 	"github.com/BytemanD/go-console/console"
 	"github.com/go-resty/resty/v2"
@@ -73,7 +73,7 @@ func (w *ProgressWriter) Write(p []byte) (n int, err error) {
 
 func Download(url string, output string, showProgress bool) error {
 	_, fileName := filepath.Split(url)
-	client := resty.New()
+	client := resty.New().SetRetryCount(3).SetRetryWaitTime(time.Second)
 	if !showProgress {
 		_, err := client.SetOutputDirectory(output).R().SetOutput(fileName).Get(url)
 		return err
@@ -124,23 +124,21 @@ func DownloadLinksInHtml(url string, regex string, output string) {
 		link = link.Next()
 	}
 	console.Info("开始下载(总数: %d), 保存路径: %s ...", len(downloadLinks), output)
-	syncutils.StartTasks(
-		syncutils.TaskOption{
-			MaxWorker:    runtime.NumCPU(),
-			ShowProgress: true,
-			TaskName:     fmt.Sprintf("下载%d个文件", len(downloadLinks)),
-		},
-		downloadLinks,
-		func(item string) error {
+	taskGroup := syncutils.TaskGroup[string]{
+		Items:        downloadLinks,
+		ShowProgress: true,
+		Title:        fmt.Sprintf("下载 %d 个文件", len(downloadLinks)),
+		Func: func(item string) error {
 			console.Debug("开始下载: %s", item)
 			if err := Download(item, output, false); err != nil {
 				console.Error("下载失败: %s", item)
 				return err
 			} else {
-				console.Success("下载完成: %s", item)
+				console.Info("下载完成: %s", item)
 				return nil
 			}
 		},
-	)
-	console.Info("下载完成")
+	}
+	taskGroup.Start()
+	console.Info("下载结束")
 }

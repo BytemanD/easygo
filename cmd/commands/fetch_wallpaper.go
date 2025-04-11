@@ -180,17 +180,11 @@ var BingImgWdbyteCmd = cli.NewCommand(cli.Cli[bingImgWdbyteCmdFlags]{
 		webFiles := []webFile{}
 		downloader := httpLib.HttpDownloader{Output: *flags.Output}
 
-		syncutils.StartTasks(
-			syncutils.TaskOption{
-				TaskName:     fmt.Sprintf("download %d picture(s)", len(files)),
-				MaxWorker:    *flags.Workers,
-				ShowProgress: true,
-				PreStart: func() {
-					console.Info("开始下载(总数: %d), 保存路径: %s ...", len(files), *flags.Output)
-				},
-			},
-			files,
-			func(file httpLib.HttpFile) error {
+		taskGroup := syncutils.TaskGroup[httpLib.HttpFile]{
+			Items:        files,
+			ShowProgress: true,
+			Title:        fmt.Sprintf("download %d picture(s)", len(files)),
+			Func: func(file httpLib.HttpFile) error {
 				startTime := time.Now()
 				err := downloader.Download(&file)
 				var result string
@@ -208,14 +202,12 @@ var BingImgWdbyteCmd = cli.NewCommand(cli.Cli[bingImgWdbyteCmdFlags]{
 				})
 				return err
 			},
-		)
-
-		result, _ := table.NewItemsTable(
-			[]string{"Result", "Name", "Size", "Spend"}, webFiles,
-		).SetStyle(
-			table.StyleLight, color.FgCyan,
-		).EnableAutoIndex().Render()
-		fmt.Println(result)
+		}
+		taskGroup.Start()
+		result, _ := table.NewItemsTable([]string{"Result", "Name", "Size", "Spend"}, webFiles).
+			SetStyle(table.StyleLight, color.FgCyan).
+			EnableAutoIndex().Render()
+		console.Println(result)
 		return nil
 	},
 })

@@ -2,7 +2,6 @@ package syncutils
 
 import (
 	"fmt"
-	"reflect"
 	"runtime"
 	"strings"
 	"sync"
@@ -10,45 +9,43 @@ import (
 	"github.com/BytemanD/go-console/console"
 )
 
-type TaskGroup struct {
-	Items        interface{}
-	Func         func(item interface{}) error
+type TaskGroup[T any] struct {
+	Items        []T
+	Func         func(item T) error
 	ShowProgress bool
 	MaxWorker    int
 	wg           *sync.WaitGroup
 	Title        string
 }
 
-func (g TaskGroup) Start() error {
-	value := reflect.ValueOf(g.Items)
-	if value.Kind() != reflect.Slice && value.Kind() != reflect.Array {
-		return fmt.Errorf("items must be slice or array")
-	}
+func (g TaskGroup[T]) Start() error {
 	g.wg = &sync.WaitGroup{}
-	g.wg.Add(value.Len())
+	g.wg.Add(len(g.Items))
 	if g.MaxWorker <= 0 {
 		g.MaxWorker = runtime.NumCPU()
 	}
 	workers := make(chan struct{}, g.MaxWorker)
-	var bar *console.Pbr
+	var bar *console.ProgressLinear
 	if g.ShowProgress {
-		bar = console.NewPbr(value.Len(), g.Title)
+		bar = console.NewProgressLinear(len(g.Items), g.Title)
+		// bar
 	} else {
 		bar = nil
 	}
-	for i := 0; i < value.Len(); i++ {
-		go func(o interface{}, wg *sync.WaitGroup) {
+	for _, item := range g.Items {
+		workers <- struct{}{}
+		go func(o T, wg *sync.WaitGroup) {
 			defer wg.Done()
-			workers <- struct{}{}
 			g.Func(o)
 			if bar != nil {
 				bar.Increment()
 			}
 			<-workers
-		}(value.Index(i).Interface(), g.wg)
+		}(item, g.wg)
 	}
+
 	if bar != nil {
-		go console.WaitAllPbrs()
+		go console.WaitAllProgressBar()
 	}
 	g.wg.Wait()
 	return nil
@@ -68,14 +65,14 @@ func StartTasks[T any](opt TaskOption, items []T, taskFunc func(item T) error) e
 	chans := make(chan struct{}, max(opt.MaxWorker, 1))
 	errs := []error{}
 
-	var bar *console.Pbr
+	var bar *console.ProgressLinear
 	if opt.ShowProgress {
 		title := opt.TaskName
 		if opt.TaskName == "" {
 			title = "tasks progress"
 		}
-		bar = console.NewPbr(len(items), title)
-		go console.WaitAllPbrs()
+		bar = console.NewProgressLinear(len(items), title)
+		go console.WaitAllProgressBar()
 	}
 	if opt.PreStart != nil {
 		opt.PreStart()
